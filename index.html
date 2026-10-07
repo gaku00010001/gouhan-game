@@ -131,6 +131,9 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .choices button.right{background:#cfe8cc;outline:2px solid var(--ok)}
 .choices button.wrong{background:#f4d0cb;outline:2px solid var(--ng)}
 .exp{margin-top:8px;font-size:.92rem}
+.count{text-align:center;padding:50px 0;color:var(--accent)}
+.count small{display:block;color:var(--muted);font-size:1rem}
+.count b{display:block;font-size:5rem;line-height:1.1;animation:pop .3s}
 /* タイトル・最終 */
 .flow{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0;align-items:center}
 .flow span{background:var(--wood-l);border-radius:20px;padding:3px 10px;font-size:.82rem}
@@ -541,7 +544,13 @@ function startStage(i){
   const s=STAGES[i];
   screen.innerHTML=`<section class="card"><h2>${s.icon} ${s.name}</h2><div id="area"></div></section>`;
   const area=document.getElementById('area');let fin=false;
-  s.play(area,(sc,note)=>{if(fin)return;fin=true;runCleanups();finishStage(i,area,Math.round(clamp(sc,0,100)),note)});
+  // スタート直後に3秒のカウントダウンをはさむ
+  const count=n=>area.innerHTML=`<div class="count"><small>準備して…</small><b>${n}</b></div>`;
+  count(3);beep(520,.1,'triangle');
+  setTimeout(()=>{count(2);beep(520,.1,'triangle')},1000);
+  setTimeout(()=>{count(1);beep(520,.1,'triangle')},2000);
+  setTimeout(()=>{beep(880,.15,'triangle');
+    s.play(area,(sc,note)=>{if(fin)return;fin=true;runCleanups();finishStage(i,area,Math.round(clamp(sc,0,100)),note)})},3000);
 }
 function finishStage(i,area,sc,note){
   G.scores[i]=sc;renderSteps();area.querySelectorAll('button,input').forEach(b=>b.disabled=true);
