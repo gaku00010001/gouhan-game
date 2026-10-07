@@ -107,6 +107,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .strip span{background:rgba(255,250,242,.85);padding:0 8px;border-radius:8px}
 .layer button{padding:9px;background:#eadcc6;font-weight:700}
 .layer button.on{background:#f1e48a}
+.answer{margin-top:10px;padding:10px 12px;border-radius:12px;background:#fff;border:2px solid var(--line)}
+.answer h3{margin:0 0 6px}
+.answer p{margin:6px 0 0;font-size:.9rem}
+.ans-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ans-grid>div>b{display:block;text-align:center;margin-bottom:2px}
+.arow{display:grid;grid-template-columns:52px 1fr 22px;gap:6px;align-items:center;margin:4px 0}
+.ans-grid>div:last-child .arow{grid-template-columns:52px 1fr}
+.arow .strip{height:32px}
 .glues{display:grid;gap:6px}
 .glues button{text-align:left;padding:8px 12px;background:#fff;border:2px solid var(--line)}
 .glues button.on{border-color:var(--accent);background:#fff3dc}
@@ -360,6 +368,16 @@ function playLayup(area,done){
     const need=GRANK[G.order.glue],have=sel?GRANK[sel.cls]:0;
     const gp=have===need?30:have>need?18:0;
     const gtxt=!sel?'接着剤未選択':have===need?`接着剤 ${sel.cls}（ぴったり）`:have>need?`接着剤 ${sel.cls}（性能は足りるがオーバースペック）`:`接着剤 ${sel.cls}（性能不足！）`;
+    // 答え合わせ：自分の組み方と正解を、ゲームと同じ絵で並べて表示
+    const row=(k,d,gl,mark)=>`<div class="arow"><span class="ln">${k+1}層目<br><small>${names[k]}</small></span>
+      <div class="strip ${d}${gl?' glued':''}"><span>${d==='h'?'⟷':'↕'}${gl?' 🧴':''}</span></div>${mark==null?'':`<b>${mark?'⭕':'❌'}</b>`}</div>`;
+    const right=GLUES.find(g=>g.cls===G.order.glue);
+    lys.style.display='none';
+    lys.insertAdjacentHTML('afterend',`<div class="answer"><h3>📐 答え合わせ</h3><div class="ans-grid">
+      <div><b>あなたの組み方</b>${names.map((_,k)=>row(k,dirs[k],glue[k],dirs[k]===want[k]&&glue[k]===wantGlue[k])).join('')}</div>
+      <div><b>正解</b>${names.map((_,k)=>row(k,want[k],wantGlue[k],null)).join('')}</div></div>
+      <p>🧴 接着剤　あなた：<b>${sel?`${sel.cls}（${sel.name}）`:'未選択'}</b> ${have===need?'⭕':'❌'}　／　正解：<b>${right.cls}（${right.name}）</b></p>
+      <p class="note">木目を直角に交差させ、表板・裏板は⟷向き。接着剤は${n===3?'心板':'添心板'}の両面に塗ります。</p></div>`);
     done(a/n*40+b/n*30+gp,`木目の向き ${a}/${n}・のり付け ${b}/${n}・${gtxt}`)};
   area.querySelector('.act').onclick=finish;
   loop(dt=>{t-=dt;tm.textContent=`残り ${Math.max(0,t).toFixed(1)}秒`;if(t<=0){finish();return false}});
