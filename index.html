@@ -115,6 +115,23 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .arow{display:grid;grid-template-columns:52px 1fr 22px;gap:6px;align-items:center;margin:4px 0}
 .ans-grid>div:last-child .arow{grid-template-columns:52px 1fr}
 .arow .strip{height:32px}
+/* 仕上げ・検査 */
+.ipanel{position:relative;height:260px;border-radius:4px;touch-action:none;cursor:pointer;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.25);
+  background:radial-gradient(ellipse 30% 12% at 30% 40%,rgba(180,120,60,.18),transparent),radial-gradient(ellipse 25% 10% at 75% 70%,rgba(150,95,45,.15),transparent),
+  repeating-linear-gradient(0deg,#f3d9a8 0 7px,#ebcb92 7px 9px,#f6dfb2 9px 15px,#e6c287 15px 16px)}
+.spot{position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.spot.found{box-shadow:0 0 0 3px var(--ok)}
+.spot.missed{box-shadow:0 0 0 3px var(--ng)}
+.spot .tag{position:absolute;top:100%;white-space:nowrap;font-size:.72rem;font-weight:700;background:#fff;padding:0 6px;border-radius:6px;pointer-events:none;z-index:2}
+.spot.missed .tag{color:var(--ng)}
+.miss{position:absolute;transform:translate(-50%,-50%);color:var(--ng);font-size:1.3rem;pointer-events:none}
+.d-pank{width:44px;height:34px;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,#fbe9c6 20%,#e9c690 55%,#c79a5c 75%,transparent 78%);box-shadow:2px 3px 4px rgba(90,55,20,.35)}
+.d-peel{width:56px;height:14px;background:linear-gradient(#f6dfb2 45%,#4a2d14 45%,#4a2d14 65%,#c99555 65%);transform:rotate(-2deg);border-radius:2px}
+.d-crack{width:52px;height:3px;background:#3b2210;border-radius:2px;transform:rotate(4deg)}
+.d-hole{width:18px;height:15px;border-radius:50%;background:radial-gradient(#1d120a 55%,#6b4423 72%,transparent 76%)}
+.d-chip{width:40px;height:40px;background:var(--card);clip-path:polygon(0 0,100% 0,0 100%)}
+.spot.corner{margin:0;align-items:flex-start;justify-content:flex-start;border-radius:0 0 50% 0}
+.d-rough{width:58px;height:40px;border-radius:40%;opacity:.75;background:radial-gradient(#a08a6e 1px,transparent 1.5px) 0 0/5px 5px,radial-gradient(#8e7658 1px,transparent 1.5px) 2px 3px/6px 6px}
 .glues{display:grid;gap:6px}
 .glues button{text-align:left;padding:8px 12px;background:#fff;border:2px solid var(--line)}
 .glues button.on{border-color:var(--accent);background:#fff3dc}
@@ -409,11 +426,43 @@ function playPress(area,done){
     if(t>=T){done(prog*.6-pank*8,`時間切れ…接着 ${Math.round(prog)}%${extra}`);return false}});
 }
 
-function playSand(area,done){
-  scratch(area,{time:8,label:'研磨',radius:6,tone:500,
-    msg:'四辺はトリミング済み！最後に表面をなぞって、サンダーでなめらかに磨こう（8秒）',
-    bg:(c,W,H)=>grain(c,W,H,'#f6dfb2','rgba(190,140,80,.3)'),
-    cell:()=>`hsl(${30+Math.random()*10},${12+Math.random()*12}%,${52+Math.random()*16}%)`},done);
+// 仕上げ・検査：パネルの中から不良を見つけてタップする
+const DEFECTS={
+  pank:{name:'パンク（膨れ）',why:'含水率の高い単板を熱圧すると、水分が蒸気になって膨れます。'},
+  peel:{name:'はく離',why:'接着剤の塗りむらや圧力不足で、層がはがれた状態です。'},
+  crack:{name:'割れ',why:'乾かしすぎや急な高温で単板が割れたものです。'},
+  hole:{name:'節抜け',why:'節が抜け落ちた穴。補修（パッチ）が必要です。'},
+  chip:{name:'角欠け',why:'トリミングや運搬のときに角が欠けたものです。'},
+  rough:{name:'研磨むら',why:'サンダーが当たらず、表面がざらついたまま残っています。'},
+};
+function playInspect(area,done){
+  // 前の工程の結果に応じて、起きやすい不良を必ず混ぜる
+  const must=[];if(G.moisture!=null&&G.moisture>12)must.push('pank');if(G.glueOK===false||G.scores[6]<60)must.push('peel');
+  if(G.moisture!=null&&G.moisture<8)must.push('crack');
+  const list=[...new Set([...must,...shuffle(Object.keys(DEFECTS).filter(k=>!must.includes(k)))])].slice(0,4);
+  const spots=[];
+  const place=k=>{if(k==='chip')return[0,0];
+    for(let n=0;n<50;n++){const p=[8+Math.random()*84,14+Math.random()*72];if(spots.every(s=>Math.hypot((s[0]-p[0])*2.4,s[1]-p[1])>26))return p}return[50,50]};
+  list.forEach(k=>spots.push(place(k)));
+  area.innerHTML=`<div class="hud"><span class="tm"></span><span class="fd"></span></div>
+  <div class="ipanel">${list.map((k,n)=>`<div class="spot${k==='chip'?' corner':''}" data-n="${n}" style="left:${spots[n][0]}%;top:${spots[n][1]}%"><i class="d-${k}"></i></div>`).join('')}</div>
+  <div class="msg">トリミングと研磨が終わった合板です。出荷前の検査で、不良を<b>${list.length}か所</b>見つけてタップしよう！（15秒・関係ない所をタップすると減点）</div>`;
+  const pan=area.querySelector('.ipanel'),tm=area.querySelector('.tm'),fd=area.querySelector('.fd'),msg=area.querySelector('.msg');
+  let found=0,miss=0,t=15,end=false;
+  const upd=()=>fd.textContent=`発見 ${found} / ${list.length}　ミス ${miss}`;upd();
+  const finish=()=>{if(end)return;end=true;
+    pan.querySelectorAll('.spot:not(.found)').forEach(s=>{s.classList.add('missed');s.insertAdjacentHTML('beforeend',`<span class="tag">見逃し：${DEFECTS[list[+s.dataset.n]].name}</span>`)});
+    done(found/list.length*100-miss*5,`発見 ${found}/${list.length}か所・ミスタップ ${miss}回`)};
+  pan.addEventListener('pointerdown',e=>{if(end)return;e.preventDefault();
+    const s=e.target.closest('.spot');
+    if(s&&!s.classList.contains('found')){const d=DEFECTS[list[+s.dataset.n]];s.classList.add('found');found++;
+      s.insertAdjacentHTML('beforeend',`<span class="tag">${d.name}</span>`);msg.innerHTML=`⭕ 「${d.name}」を発見！ ${d.why}`;beep(880,.1,'triangle');upd();
+      if(found===list.length)setTimeout(finish,400);return}
+    if(s)return;
+    const r=pan.getBoundingClientRect();miss++;upd();beep(200,.12,'square',.03);
+    pan.insertAdjacentHTML('beforeend',`<b class="miss" style="left:${(e.clientX-r.left)/r.width*100}%;top:${(e.clientY-r.top)/r.height*100}%">✕</b>`);
+    msg.textContent='❌ そこは問題なし！木目や色の違いは不良ではありません。';});
+  loop(dt=>{t-=dt;tm.textContent=`残り ${Math.max(0,t).toFixed(1)}秒`;if(t<=0){finish();return false}});
 }
 
 /* ===== 工程データ（解説・クイズ） ===== */
@@ -470,10 +519,10 @@ const STAGES=[
   quiz:[
    {q:'ホットプレスの前に行う、コールドプレス（冷圧）の目的は？',c:['仮接着して、単板がずれないよう形を落ち着かせるため','接着剤を冷やして固めるため','単板を乾燥させるため','表面を研磨するため'],e:'先に仮接着しておくと、ずれずに効率よくホットプレスへ送り込めます。'},
    {q:'ホットプレスの熱盤の温度の目安は？',c:['おおむね110〜140℃','約40℃','約300℃','約600℃'],e:'接着剤を固めるのに必要な温度です。温度・圧力・時間のバランスで接着の品質が決まります。'}]},
- {icon:'✨',name:'仕上げ',yomi:'しあげ・けんさ',play:playSand,
-  fact:'固まった合板の四辺を切りそろえ（トリミング）、用途に応じて表面をサンダーで研磨します。最後に検査を行い、JAS（日本農林規格）の格付けを受けた製品にはJASマークが表示されて出荷されます。',
-  how:'パネルの上をなぞって表面をなめらかに磨き上げよう（8秒）。',
-  points:['四辺の切りそろえ＝トリミング、表面の研磨＝サンダー','JAS（日本農林規格）では、合板の含水率は14%以下などの基準がある','ホルムアルデヒド放散量は F☆☆☆☆（フォースター）が最も少ない区分','主な種類：構造用合板（建物の下地）、コンクリート型枠用合板（コンパネ）、普通合板 など'],
+ {icon:'✨',name:'仕上げ・検査',yomi:'しあげ・けんさ',play:playInspect,
+  fact:'固まった合板の四辺を切りそろえ（トリミング）、用途に応じて表面をサンダーで研磨します。最後に検査を行い、膨れ・はく離・割れなどの不良がないかを確かめます。JAS（日本農林規格）の格付けを受けた製品にはJASマークが表示されて出荷されます。',
+  how:'出荷前の合板の中から、不良（膨れ・はく離・割れ・節抜けなど）を見つけてタップしよう。前の工程で失敗すると、それが原因の不良が出てきます（15秒）。',
+  points:['四辺の切りそろえ＝トリミング、表面の研磨＝サンダー','検査で見る主な不良：パンク（膨れ）・はく離・割れ・節抜け・角欠け・研磨むら','不良の多くは前の工程に原因がある（含水率が高い→パンク、接着不良→はく離 など）','JAS（日本農林規格）では、合板の含水率は14%以下などの基準がある','ホルムアルデヒド放散量は F☆☆☆☆（フォースター）が最も少ない区分','主な種類：構造用合板（建物の下地）、コンクリート型枠用合板（コンパネ）、普通合板 など'],
   quiz:[
    {q:'合板の表示にある「F☆☆☆☆（フォースター）」は何を表す？',c:['ホルムアルデヒド放散量が最も少ない区分','強度が最も高い区分','燃えにくさの区分','水に最も強い区分'],e:'接着剤などから出るホルムアルデヒドの放散量の区分で、☆が多いほど少なく、F☆☆☆☆が最上位です。'},
    {q:'「コンパネ」とは、どんな合板のこと？',c:['コンクリート型枠用合板','構造用合板','化粧合板','防火用の合板'],e:'コンクリートパネルの略で、コンクリートを流し込む型枠に使う合板です。'},
@@ -503,6 +552,8 @@ const GLOSSARY=[
  ['コールドプレス（冷圧）','れいあつ','熱をかけずに圧力をかけ、単板を仮接着する工程。'],
  ['ホットプレス（熱圧）','ねつあつ','熱した盤で熱と圧力をかけ、接着剤を固める工程。'],
  ['パンク','','熱圧時に単板の水分が蒸気になり、膨れたり接着がはがれたりする不良。'],
+ ['はく離','はくり','接着剤の塗りむらや圧力不足などで、合板の層どうしがはがれる不良。'],
+ ['節抜け','ふしぬけ','単板の節が抜け落ちてできた穴。補修（パッチ）して使う。'],
  ['トリミング','','合板の四辺を切りそろえて、決まった寸法に仕上げること。'],
  ['サンダー','','合板の表面を研磨して、なめらかにする機械。'],
  ['特類・1類・2類','','JASの「接着の程度」の区分。特類＝屋外・常時湿潤、1類＝断続的に湿潤、2類＝主に室内（時々湿潤）。'],
@@ -604,7 +655,7 @@ function inspect(){
   const need=GRANK[o.glue],have=G.glue?GRANK[G.glue.cls]:0;
   add(have===need?'ok':have>need?'warn':'ng','接着の性能',!G.glue?`接着剤が選ばれていない（必要：${o.glue}）`:have===need?`${G.glue.cls}：使い道にぴったり`:have>need?`${G.glue.cls}：性能は十分だが、必要な${o.glue}よりオーバースペックでコスト高`:`${G.glue.cls}：必要な${o.glue}に足りず、使用中にはがれる恐れ`);
   add(G.glueOK&&s[6]>=60?'ok':s[6]>=40?'warn':'ng','接着（熱圧）',!G.glueOK?'接着剤の塗り忘れ・塗りすぎがあった':s[6]>=60?'しっかり接着できた':'接着が不十分な部分がある');
-  add(s[7]>=70?'ok':'warn','表面仕上げ',s[7]>=70?'なめらかに研磨できた':'表面のざらつきが残った');
+  add(s[7]>=70?'ok':'warn','出荷前検査',s[7]>=70?'不良を見逃さずに検査できた':'不良の見逃しがあり、不良品が出荷される恐れ');
   return L;
 }
 function showFinal(){
