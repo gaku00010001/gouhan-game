@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>合板ファクトリー</title>
+<style>
+:root{
+  --bg:#f4ecdf; --card:#fffaf2; --ink:#3a2817; --muted:#8a735a; --line:#e3d3bb;
+  --wood:#d9a866; --wood-l:#f0d49a; --accent:#c8551f; --accent-d:#a4400f;
+  --ok:#3f8f4a; --ng:#c0392b; --zone:rgba(63,143,74,.28);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif;line-height:1.6;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#app{max-width:760px;margin:0 auto;padding:12px 16px 40px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-bottom:12px}
+header h1{font-size:1.3rem;margin:0;flex:1}
+#total{font-weight:700;color:var(--accent)}
+#steps{display:flex;gap:4px;width:100%;overflow-x:auto}
+.step{flex:1;min-width:58px;text-align:center;padding:4px 2px;border-radius:8px;background:#eadcc6;font-size:1.1rem;opacity:.55}
+.step small{display:block;font-size:.62rem;line-height:1.2}
+.step.now{opacity:1;background:var(--wood-l);outline:2px solid var(--accent)}
+.step.done{opacity:1;background:#d7e8d2}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 14px rgba(80,50,20,.08)}
+h2{margin:0 0 10px;font-size:1.4rem}
+.yomi{font-size:.8rem;color:var(--muted);margin-left:8px;font-weight:400}
+.stage-no{color:var(--muted);font-size:.85rem}
+.fact,.how{border-radius:12px;padding:10px 14px;margin:10px 0}
+.fact{background:#f3e6d0}.how{background:#e7efe0}
+.fact p,.how p{margin:4px 0 0}
+button{font:inherit;cursor:pointer;border:none;border-radius:12px}
+.big{display:block;width:100%;padding:16px;margin-top:14px;font-size:1.15rem;font-weight:700;color:#fff;background:var(--accent);box-shadow:0 4px 0 var(--accent-d);touch-action:manipulation}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 var(--accent-d)}
+.big:disabled{opacity:.45;cursor:default}
+.msg{margin-top:10px;padding:8px 12px;background:#f3e6d0;border-radius:10px;font-size:.92rem;min-height:2.4em}
+.hud{display:flex;justify-content:space-between;gap:8px;font-weight:700;margin:6px 0;flex-wrap:wrap}
+.cv{width:100%;height:auto;display:block;border-radius:12px;background:#2b2420;touch-action:none}
+.cv.scr{background:#cdb89a;cursor:crosshair}
+/* 玉切り */
+.ruler{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);padding:0 2px}
+.logbox{padding:18px 0 8px}
+.log{position:relative;height:90px;border-radius:45px/45px;background:
+  repeating-linear-gradient(0deg,#6b4527 0 6px,#5a3920 6px 9px,#7a5030 9px 15px);border:3px solid #4a2f1a}
+.mark{position:absolute;top:-14px;bottom:-14px;width:4px;margin-left:-2px;background:rgba(200,40,30,.35);border-radius:2px}
+.mark.active{background:#e02b20;box-shadow:0 0 8px #e02b20}
+.saw{position:absolute;top:-22px;bottom:-22px;width:3px;margin-left:-1.5px;background:#fff;box-shadow:0 0 0 1px #333}
+.saw span{position:absolute;top:-26px;left:-12px;font-size:22px}
+.cutline{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:var(--bg)}
+/* ゲージ */
+.gauge{position:relative;height:34px;border-radius:10px;background:#eadcc6;margin-top:12px;overflow:hidden}
+.gauge .zone{position:absolute;top:0;bottom:0;background:var(--zone);border-left:2px solid var(--ok);border-right:2px solid var(--ok)}
+.gauge .needle{position:absolute;top:0;bottom:0;width:5px;margin-left:-2.5px;background:var(--accent)}
+.gauge span{position:absolute;bottom:2px;font-size:.7rem;color:var(--muted)}
+.gl{left:6px}.gr{right:6px}.gm{left:50%;transform:translateX(-50%);top:2px;bottom:auto!important;color:var(--ok)!important;font-weight:700}
+/* 乾燥 */
+.dryer{position:relative;height:120px;border-radius:12px;background:#3a3330;overflow:hidden}
+.oven{position:absolute;left:22%;right:22%;top:10px;bottom:28px;background:linear-gradient(#b8452a,#7d2b1c);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ffd9b0;z-index:2;opacity:.92}
+.heat{font-size:1.4rem;animation:wav 1s infinite alternate}
+@keyframes wav{to{transform:translateY(-5px)}}
+.belt{position:absolute;left:0;right:0;bottom:16px;height:6px;background:repeating-linear-gradient(90deg,#777 0 10px,#555 10px 20px)}
+.sheet{position:absolute;bottom:22px;width:24%;height:10px;border-radius:2px;left:0;animation:slide 3s linear infinite;z-index:1}
+@keyframes slide{from{left:-25%}to{left:100%}}
+.meters{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media (max-width:520px){.meters{grid-template-columns:1fr}}
+.meters>div{background:#f3e6d0;border-radius:12px;padding:10px}
+.lbl{font-size:.85rem;color:var(--muted)}
+.num{font-size:2rem;font-weight:800}
+.num.good{color:var(--ok)}
+.bar{position:relative;height:14px;background:#e0cfb3;border-radius:7px;overflow:hidden;margin:4px 0}
+.bar .fill{height:100%;background:#5b8fc7}
+.bar .risk{background:var(--ng)}
+.bar .tz{position:absolute;top:0;bottom:0;left:11.43%;width:5.71%;background:var(--zone);border:1px solid var(--ok)}
+.sub{font-size:.8rem;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+/* 選別 */
+.vstage{position:relative;padding:10px 0}
+.veneer{position:relative;height:190px;border-radius:6px;background:
+  repeating-linear-gradient(0deg,#efcf96 0 7px,#e6c083 7px 9px,#f2d6a2 9px 16px,#e3bb7c 16px 17px);
+  box-shadow:0 3px 8px rgba(0,0,0,.2)}
+.veneer.in{animation:pop .25s}
+@keyframes pop{from{transform:translateX(40px);opacity:0}}
+.knot{position:absolute;border-radius:50%;background:radial-gradient(#5b3518 30%,#8a5528 60%,transparent 72%)}
+.crack{position:absolute;height:4px;background:#3b2210;border-radius:2px;box-shadow:0 0 0 1px #6b4423}
+.hole{position:absolute;width:38px;height:32px;border-radius:50%;background:radial-gradient(#1d120a 55%,#6b4423 70%,transparent 75%)}
+.judge{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:5rem;font-weight:900;pointer-events:none}
+.sort-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sort-btns button{padding:12px 4px;font-weight:700;background:var(--wood-l);color:var(--ink);box-shadow:0 3px 0 #c9a066}
+.sort-btns small{font-weight:400;font-size:.75rem}
+/* 組み立て */
+.layer{display:grid;grid-template-columns:64px 1fr auto auto;gap:8px;align-items:center;margin:6px 0}
+.ln{font-size:.8rem;line-height:1.2;text-align:center}
+.ln small{color:var(--muted)}
+.strip{height:44px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:#5b3a1c;transition:.2s}
+.strip.h{background:repeating-linear-gradient(0deg,#efcf96 0 5px,#d9a866 5px 7px)}
+.strip.v{background:repeating-linear-gradient(90deg,#e8c48a 0 5px,#c99555 5px 7px)}
+.strip.glued{box-shadow:0 0 0 3px #f6f1c8,0 0 12px 3px #e9e08a}
+.strip span{background:rgba(255,250,242,.85);padding:0 8px;border-radius:8px}
+.layer button{padding:10px;background:#eadcc6;font-weight:700}
+.layer button.on{background:#f1e48a}
+/* 熱圧 */
+.press{position:relative;height:150px;background:#3a3330;border-radius:12px;overflow:hidden}
+.plate{position:absolute;left:12%;right:12%;height:34px;background:linear-gradient(#9aa3ad,#6d757e);border-radius:4px}
+.plate.top{top:8px}.plate.bot{bottom:14px}
+.pboard{position:absolute;left:16%;right:16%;bottom:48px;height:30px;background:repeating-linear-gradient(0deg,#efcf96 0 6px,#c99555 6px 7px);border-radius:2px}
+.steam{position:absolute;left:0;right:0;top:40%;text-align:center;font-size:1.6rem;opacity:0;transition:.3s}
+.progress{height:16px;background:#e0cfb3;border-radius:8px;overflow:hidden;margin-top:8px}
+.progress div{height:100%;width:0;background:var(--ok)}
+/* 結果 */
+.result{margin-top:14px;padding:14px;border-radius:12px;background:#fff3dc;border:2px solid var(--wood);text-align:center;animation:pop .3s}
+.result .sc{font-size:2.4rem;font-weight:900;color:var(--accent)}
+.stars{font-size:1.6rem;letter-spacing:4px}
+/* タイトル・最終 */
+.flow{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.flow span{background:var(--wood-l);border-radius:20px;padding:3px 10px;font-size:.85rem}
+.ply{margin:16px auto;width:min(320px,90%)}
+.ply div{height:16px;border:1px solid rgba(80,50,20,.25)}
+.ply div:nth-child(odd){background:repeating-linear-gradient(0deg,#f2d6a2 0 4px,#d9a866 4px 5px)}
+.ply div:nth-child(even){background:repeating-linear-gradient(90deg,#e8c48a 0 4px,#b98445 4px 6px)}
+.rank{font-size:3.4rem;font-weight:900;color:var(--accent);text-align:center;line-height:1}
+.title-rank{text-align:center;font-weight:700;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.92rem}
+td{padding:5px 4px;border-bottom:1px solid var(--line)}
+td.b{width:45%}
+.mini{height:10px;background:#e0cfb3;border-radius:5px;overflow:hidden}
+.mini div{height:100%;background:var(--wood)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><h1>🪵 合板ファクトリー</h1><div id="total"></div><div id="steps"></div></header>
+  <main id="screen"></main>
+</div>
+<script>
+/* ===== ユーティリティ ===== */
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const screen=document.getElementById('screen'),stepsEl=document.getElementById('steps'),totalEl=document.getElementById('total');
+let cleanups=[];
+const addCleanup=f=>cleanups.push(f);
+const runCleanups=()=>{cleanups.forEach(f=>{try{f()}catch(e){}});cleanups=[]};
+function loop(fn){let last=performance.now(),run=true,id;
+  const f=now=>{if(!run)return;const dt=Math.min(.05,(now-last)/1000);last=now;if(fn(dt)===false){run=false;return}id=requestAnimationFrame(f)};
+  id=requestAnimationFrame(f);const stop=()=>{run=false;cancelAnimationFrame(id)};addCleanup(stop);return stop}
+function onKey(down,up){
+  const d=e=>{if(e.code!=='Space')return;e.preventDefault();if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();if(!e.repeat&&down)down()};
+  const u=e=>{if(e.code!=='Space')return;e.preventDefault();if(up)up()};
+  addEventListener('keydown',d);addEventListener('keyup',u);
+  addCleanup(()=>{removeEventListener('keydown',d);removeEventListener('keyup',u)})}
+let actx;
+function beep(f=600,d=.08,type='sine',vol=.05){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.value=f;g.gain.value=vol;o.connect(g);g.connect(actx.destination);
+  o.start();g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.stop(actx.currentTime+d)}catch(e){}}
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function grain(ctx,W,H,base,line){ctx.fillStyle=base;ctx.fillRect(0,0,W,H);ctx.strokeStyle=line;ctx.lineWidth=1.5;
+  for(let y=6;y<H;y+=11){ctx.beginPath();for(let x=0;x<=W;x+=16){const yy=y+Math.sin(x/70+y)*3;x?ctx.lineTo(x,yy):ctx.moveTo(x,yy)}ctx.stroke()}}
+
+/* ===== 汎用：こすりゲーム（剥皮・研磨） ===== */
+function scratch(area,o,done){
+  const W=640,H=240,cols=40,rows=15,cw=W/cols,ch=H/rows;
+  area.innerHTML=`<div class="hud"><span class="tm">残り ${o.time.toFixed(1)}秒</span><span class="pc">${o.label} 0%</span></div>
+  <canvas class="cv scr" width="${W}" height="${H}"></canvas><div class="msg">${o.msg}</div>`;
+  const cv=area.querySelector('canvas'),ctx=cv.getContext('2d'),tm=area.querySelector('.tm'),pc=area.querySelector('.pc');
+  const cells=[];for(let j=0;j<rows;j++)for(let i=0;i<cols;i++)cells.push({i,j,on:true,c:o.cell(i,j)});
+  let cleared=0,t=o.time,started=false,down=false,last=null;
+  const rub=(x,y)=>{for(const c of cells)if(c.on){const dx=(c.i+.5)*cw-x,dy=(c.j+.5)*ch-y;if(dx*dx+dy*dy<900){c.on=false;cleared++}}};
+  const pos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]};
+  cv.addEventListener('pointerdown',e=>{e.preventDefault();down=true;started=true;try{cv.setPointerCapture(e.pointerId)}catch(_){}last=pos(e);rub(...last)});
+  cv.addEventListener('pointermove',e=>{if(!down)return;const p=pos(e),dx=p[0]-last[0],dy=p[1]-last[1],n=Math.ceil(Math.hypot(dx,dy)/10)||1;
+    for(let k=1;k<=n;k++)rub(last[0]+dx*k/n,last[1]+dy*k/n);last=p;if(Math.random()<.3)beep(o.tone+Math.random()*80,.03,'sawtooth',.012)});
+  ['pointerup','pointercancel'].forEach(ev=>cv.addEventListener(ev,()=>down=false));
+  loop(dt=>{
+    if(started)t-=dt;
+    ctx.clearRect(0,0,W,H);ctx.save();rr(ctx,4,4,W-8,H-8,o.radius);ctx.clip();o.bg(ctx,W,H);
+    for(const c of cells)if(c.on){ctx.fillStyle=c.c;ctx.fillRect(c.i*cw,c.j*ch,cw+.6,ch+.6)}ctx.restore();
+    const r=cleared/cells.length;
+    tm.textContent=started?`残り ${Math.max(0,t).toFixed(1)}秒`:`こすったらスタート（${o.time}秒）`;
+    pc.textContent=`${o.label} ${Math.round(r*100)}%`;
+    if(t<=0||r>=1){done(Math.min(100,r*104),`${o.label}できた割合：${Math.round(r*100)}%`);return false}
+  });
+}
+
+/* ===== 各工程 ===== */
+function playCut(area,done){
+  const T=[25,50,75];
+  area.innerHTML=`<div class="ruler"><span>0m</span><span>2m</span><span>4m</span><span>6m</span><span>8m</span></div>
+  <div class="logbox"><div class="log">${T.map(p=>`<div class="mark" style="left:${p}%"></div>`).join('')}<div class="saw"><span>🪚</span></div></div></div>
+  <div class="msg">赤く光る印（2m・4m・6m）にノコが重なった瞬間に「切る！」。3回切ります。</div>
+  <button class="big act">🪚 切る！（スペースキーでもOK）</button>`;
+  const log=area.querySelector('.log'),saw=area.querySelector('.saw'),marks=[...area.querySelectorAll('.mark')],msg=area.querySelector('.msg');
+  let k=0,x=0,dir=1,speed=40;const res=[],errs=[];marks[0].classList.add('active');
+  loop(dt=>{x+=dir*speed*dt;if(x>100){x=100;dir=-1}if(x<0){x=0;dir=1}saw.style.left=x+'%'});
+  function cut(){if(k>=3)return;const cm=Math.round(Math.abs(x-T[k])*8);errs.push(cm);res.push(Math.max(0,100-cm*2));
+    log.insertAdjacentHTML('beforeend',`<div class="cutline" style="left:${x}%"></div>`);marks[k].classList.remove('active');
+    msg.textContent=(cm<=4?'🎯 ぴったり！':cm<=15?'👍 いいね！':'😅 ずれた…')+` 誤差 ${cm}cm`;beep(cm<=4?880:cm<=15?660:300,.12,'triangle');
+    k++;speed+=22;if(k<3)marks[k].classList.add('active');
+    else{runCleanups();setTimeout(()=>done(res.reduce((a,b)=>a+b)/3,`誤差：${errs.join('cm / ')}cm`),500)}}
+  area.querySelector('.act').onclick=cut;onKey(cut);
+}
+
+function playDebark(area,done){
+  scratch(area,{time:10,label:'皮むき',radius:60,tone:120,
+    msg:'丸太をなぞって（ドラッグ）樹皮をはがそう！10秒でどれだけきれいにできるかな？',
+    bg:(c,W,H)=>grain(c,W,H,'#ecca8f','rgba(170,110,50,.35)'),
+    cell:(i,j)=>`hsl(${20+Math.random()*10},${28+Math.random()*15}%,${(j%3?20:13)+Math.random()*12}%)`},done);
+}
+
+function playPeel(area,done){
+  area.innerHTML=`<canvas class="cv" width="640" height="260"></canvas>
+  <div class="gauge"><div class="zone" style="left:42%;width:20%"></div><div class="needle"></div><span class="gl">うすい</span><span class="gm">ちょうどいい厚み</span><span class="gr">あつい</span></div>
+  <div class="hud"><span class="tm"></span><span class="pc"></span></div>
+  <button class="big act">🔪 長押しで刃を押し当てる（スペース長押しもOK）</button>`;
+  const cv=area.querySelector('canvas'),ctx=cv.getContext('2d'),nd=area.querySelector('.needle'),tm=area.querySelector('.tm'),pc=area.querySelector('.pc'),act=area.querySelector('.act');
+  let hold=false,v=30,t=0,inZ=0,ang=0;const T=10,segs=[];
+  const on=()=>hold=true,off=()=>hold=false;
+  act.addEventListener('pointerdown',e=>{e.preventDefault();on()});['pointerup','pointerleave','pointercancel'].forEach(ev=>act.addEventListener(ev,off));
+  act.addEventListener('contextmenu',e=>e.preventDefault());onKey(on,off);
+  loop(dt=>{
+    t+=dt;const drift=Math.sin(t*1.7)*28+Math.sin(t*4.3+1)*14;
+    v=clamp(v+(hold?60:-50)*dt+drift*dt,0,100);const ok=v>=42&&v<=62;if(ok)inZ+=dt;
+    ang+=3.5*dt;const r=100-70*Math.min(1,t/T);
+    segs.unshift({w:170*dt,ok,h:3+v/100*14});if(segs.length>800)segs.pop();
+    const cx=170,cy=118,y=cy+r;
+    ctx.fillStyle='#2b2420';ctx.fillRect(0,0,640,260);
+    let x=cx;for(const s of segs){ctx.fillStyle=s.ok?'#f2d29b':'#e07a5f';ctx.fillRect(x,y-s.h,s.w+.6,s.h);x+=s.w;if(x>640)break}
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(ang);
+    ctx.fillStyle='#dcae6e';ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(120,70,30,.4)';ctx.lineWidth=2;for(let rr2=14;rr2<r;rr2+=13){ctx.beginPath();ctx.arc(0,0,rr2,0,Math.PI*2);ctx.stroke()}
+    ctx.strokeStyle='rgba(90,50,20,.5)';for(let k=0;k<3;k++){ctx.beginPath();ctx.moveTo(0,0);const a=k*2.1;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);ctx.stroke()}
+    ctx.fillStyle='#666';ctx.beginPath();ctx.arc(0,0,11,0,Math.PI*2);ctx.fill();ctx.restore();
+    ctx.fillStyle='#9aa3ad';ctx.beginPath();ctx.moveTo(cx-6,y+1);ctx.lineTo(cx+70,y+1);ctx.lineTo(cx+70,y+22);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#ccc';ctx.font='14px sans-serif';ctx.fillText('単板（ベニヤ）→',430,y-24);
+    nd.style.left=v+'%';tm.textContent=`残り ${Math.max(0,T-t).toFixed(1)}秒`;pc.textContent=`良品率 ${Math.round(inZ/t*100)}%`;
+    if(t>=T){done(inZ/T*100,`ちょうどいい厚みで剥けた時間：${inZ.toFixed(1)}秒 / ${T}秒`);return false}
+  });
+}
+
+function playDry(area,done){
+  area.innerHTML=`<div class="dryer"><div class="belt"></div><div class="oven"><span class="heat">♨ ♨ ♨</span><small>ドライヤー</small></div><div class="sheet"></div></div>
+  <div class="meters">
+    <div><div class="lbl">含水率</div><div class="num mo">70.0%</div><div class="bar"><div class="fill mf"></div><div class="tz"></div></div><div class="sub">目標 8〜12%（10%がベスト）</div></div>
+    <div><div class="lbl">温度 <b class="tv">150</b>℃</div><input type="range" class="temp" min="110" max="200" value="150">
+      <div class="lbl">割れリスク（180℃超で上昇）</div><div class="bar"><div class="fill risk" style="width:0"></div></div></div>
+  </div>
+  <div class="msg">温度を上げると早く乾くけど、上げすぎると割れが出ます。早さと正確さのバランスが勝負！</div>
+  <button class="big act">📤 取り出す！（スペースでもOK）</button>`;
+  const g=s=>area.querySelector(s),temp=g('.temp'),tv=g('.tv'),mo=g('.mo'),mf=g('.mf'),risk=g('.risk'),sheet=g('.sheet');
+  let m=70,t=0,crack=0,fin=false;
+  loop(dt=>{t+=dt;const T=+temp.value;tv.textContent=T;m=Math.max(0,m-(T-100)*.07*dt);
+    if(T>180)crack=Math.min(1,crack+(T-180)/20*.16*dt);
+    mo.textContent=m.toFixed(1)+'%';mo.className='num mo'+(m>=8&&m<=12?' good':'');mf.style.width=(m/70*100)+'%';risk.style.width=crack*100+'%';
+    sheet.style.background=`hsl(34,50%,${32+(70-m)/70*42}%)`;
+    if(m<=0){finish();return false}});
+  function finish(){if(fin)return;fin=true;const acc=Math.max(0,75-Math.abs(m-10)*12),sp=clamp((30-t)/20,0,1)*25,pen=crack*45;
+    done(acc+sp-pen,`含水率 ${m.toFixed(1)}%・時間 ${t.toFixed(1)}秒${pen>2?`・割れ発生 -${Math.round(pen)}点`:''}`)}
+  g('.act').onclick=finish;onKey(finish);
+}
+
+function playSort(area,done){
+  const types=shuffle(['A','A','A','B','B','B','X','X']),N=types.length,name={A:'表板',B:'心板',X:'補修行き'};
+  area.innerHTML=`<div class="hud"><span class="tm"></span><span class="cnt"></span></div>
+  <div class="vstage"><div class="veneer"></div><div class="judge"></div></div>
+  <div class="sort-btns"><button data-g="A">✨ 表板<br><small>きれい</small></button><button data-g="B">🟤 心板<br><small>小さな節がある</small></button><button data-g="X">🩹 補修行き<br><small>割れ・穴がある</small></button></div>
+  <div class="msg">単板をよく見て仕分けよう！（20秒で8枚）</div>`;
+  const g=s=>area.querySelector(s),vn=g('.veneer'),jd=g('.judge'),tm=g('.tm'),cnt=g('.cnt'),msg=g('.msg');
+  const R=(a,b)=>a+Math.random()*(b-a);
+  const knot=()=>`<i class="knot" style="left:${R(6,88)}%;top:${R(12,75)}%;width:${R(14,22)}px;height:${R(10,15)}px"></i>`;
+  function feat(t){let h='';if(t==='B')for(let k=0,n=2+(Math.random()*3|0);k<n;k++)h+=knot();
+    if(t==='X'){h+=Math.random()<.5?`<i class="crack" style="left:${R(5,40)}%;top:${R(20,75)}%;width:${R(35,55)}%;transform:rotate(${R(-3,3)}deg)"></i>`
+      :`<i class="hole" style="left:${R(15,75)}%;top:${R(20,60)}%"></i>`;if(Math.random()<.5)h+=knot()}return h}
+  let i=0,ok=0,t=20,end=false;
+  const show=()=>{vn.innerHTML=feat(types[i]);cnt.textContent=`${i+1} / ${N}`;vn.classList.remove('in');void vn.offsetWidth;vn.classList.add('in')};
+  const finish=()=>{if(end)return;end=true;done(ok/N*100,`正解 ${ok} / ${N}枚`)};
+  area.querySelectorAll('.sort-btns button').forEach(b=>b.onclick=()=>{if(end)return;const right=b.dataset.g===types[i];
+    if(right){ok++;jd.textContent='⭕';jd.style.color='var(--ok)';msg.textContent='正解！';beep(880,.1,'triangle')}
+    else{jd.textContent='❌';jd.style.color='var(--ng)';msg.textContent=`ざんねん…正しくは「${name[types[i]]}」`;beep(200,.15,'square',.03)}
+    setTimeout(()=>jd.textContent='',350);i++;i>=N?finish():show()});
+  show();
+  loop(dt=>{t-=dt;tm.textContent=`残り ${Math.max(0,t).toFixed(1)}秒`;if(t<=0){finish();return false}});
+}
+
+function playLayup(area,done){
+  const names=['表板','心板','中板','心板','裏板'],want=['h','v','h','v','h'],wantGlue=[0,1,0,1,0],glue=[0,0,0,0,0];
+  let dirs;do{dirs=want.map(()=>Math.random()<.5?'h':'v')}while(dirs.filter((d,k)=>d===want[k]).length>3);
+  area.innerHTML=`<div class="hud"><span class="tm"></span><span>5枚（奇数枚）で組み立て</span></div><div class="lys"></div>
+  <div class="msg">ルール ① となりあう板は木目を直角に交差させる ② 表板・裏板の木目は「⟷」向き ③ 接着剤は心板（2層目・4層目）の両面に塗る</div>
+  <button class="big act">✅ 重ねてプレスへ送る</button>`;
+  const lys=area.querySelector('.lys'),tm=area.querySelector('.tm');
+  function render(){lys.innerHTML=names.map((n,k)=>`<div class="layer"><span class="ln">${k+1}層目<br><small>${n}</small></span>
+    <div class="strip ${dirs[k]}${glue[k]?' glued':''}"><span>木目 ${dirs[k]==='h'?'⟷':'↕'}${glue[k]?'　🧴のり':''}</span></div>
+    <button data-r="${k}">↻ 向き</button><button data-g="${k}" class="${glue[k]?'on':''}">🧴 のり</button></div>`).join('');
+    lys.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const k=+b.dataset.r;dirs[k]=dirs[k]==='h'?'v':'h';beep(520,.05);render()});
+    lys.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const k=+b.dataset.g;glue[k]^=1;beep(420,.05);render()})}
+  render();let t=25,end=false;
+  const finish=()=>{if(end)return;end=true;const a=dirs.filter((d,k)=>d===want[k]).length,b=glue.filter((g,k)=>g===wantGlue[k]).length;
+    done((a+b)*10,`木目の向き ${a}/5・接着剤 ${b}/5`)};
+  area.querySelector('.act').onclick=finish;
+  loop(dt=>{t-=dt;tm.textContent=`残り ${Math.max(0,t).toFixed(1)}秒`;if(t<=0){finish();return false}});
+}
+
+function playPress(area,done){
+  area.innerHTML=`<div class="press"><div class="plate top"></div><div class="pboard"></div><div class="plate bot"></div><div class="steam">💨 ジュワ〜 💨</div></div>
+  <div class="gauge"><div class="zone" style="left:55%;width:20%"></div><div class="needle"></div><span class="gl">0</span><span class="gm">適正圧力</span><span class="gr">MAX</span></div>
+  <div class="hud"><span class="tm"></span><span>🌡 約120℃</span><span class="pg"></span></div>
+  <div class="progress"><div></div></div>
+  <div class="msg">連打で圧力を上げ、緑のゾーンをキープ！ゾーン内にいる間だけ接着が進みます（入れすぎ注意）。</div>
+  <button class="big act">💪 加圧！（連打／スペース連打）</button>`;
+  const g=s=>area.querySelector(s),top=g('.plate.top'),nd=g('.needle'),tm=g('.tm'),pg=g('.pg'),pf=g('.progress div'),st=g('.steam'),msg=g('.msg');
+  let p=0,t=0,prog=0;const T=15;
+  const pump=()=>{p=Math.min(100,p+8);beep(250+p*5,.04,'square',.02)};
+  g('.act').addEventListener('pointerdown',e=>{e.preventDefault();pump()});onKey(pump);
+  loop(dt=>{t+=dt;p=Math.max(0,p-(6+p*.12)*dt);const z=p>=55&&p<=75;
+    if(z)prog+=100/6*dt;
+    if(p>88){prog=Math.max(0,prog-15*dt);msg.textContent='⚠ 圧力オーバー！板がつぶれちゃう！'}
+    else if(z)msg.textContent='いい感じ！そのままキープ！';else msg.textContent=p<55?'圧力が足りない！連打！':'少し強いかも…';
+    top.style.transform=`translateY(${p*.36}px)`;st.style.opacity=z?1:0;nd.style.left=p+'%';
+    pf.style.width=Math.min(100,prog)+'%';pg.textContent=`接着 ${Math.min(100,Math.round(prog))}%`;tm.textContent=`残り ${Math.max(0,T-t).toFixed(1)}秒`;
+    if(prog>=100){done(clamp(100-Math.max(0,t-6.5)*6,40,100),`接着完了まで ${t.toFixed(1)}秒`);return false}
+    if(t>=T){done(prog*.6,`時間切れ…接着 ${Math.round(prog)}%`);return false}});
+}
+
+function playSand(area,done){
+  scratch(area,{time:8,label:'研磨',radius:6,tone:500,
+    msg:'四辺はトリミング済み！最後に表面をなぞってサンダーでツルツルに磨こう（8秒）',
+    bg:(c,W,H)=>grain(c,W,H,'#f6dfb2','rgba(190,140,80,.3)'),
+    cell:()=>`hsl(${30+Math.random()*10},${12+Math.random()*12}%,${52+Math.random()*16}%)`},done);
+}
+
+/* ===== 工程データ ===== */
+const STAGES=[
+ {icon:'🪚',name:'玉切り',yomi:'たまぎり',play:playCut,
+  fact:'山から運ばれてきた長い原木を、つくる合板の大きさに合わせた長さ（約2m）に切りそろえます。',
+  how:'左右に動くノコギリが、赤く光る印に重なった瞬間にボタン（またはスペースキー）！3回切ります。'},
+ {icon:'🌲',name:'剥皮',yomi:'はくひ',play:playDebark,
+  fact:'樹皮には砂や小石がかみ込んでいて、次の工程の刃を傷めてしまいます。そこでバーカーという機械で皮をむきます。樹種によってはお湯や蒸気で温めて（蒸煮）、木をやわらかくしておきます。',
+  how:'丸太の上をマウスや指でなぞって樹皮をはがそう。制限時間は10秒！'},
+ {icon:'🌀',name:'ロータリーレース',yomi:'かつらむき',play:playPeel,
+  fact:'丸太を回転させながら刃を当て、大根のかつらむきのように薄い「単板（ベニヤ）」を連続して剥いていきます。厚さは数mm。最後に残る芯（剥き芯）も杭などに再利用されます。',
+  how:'ボタンを長押しすると刃が強く当たって単板が厚くなり、離すと薄くなります。針を緑のゾーンにキープ！'},
+ {icon:'♨️',name:'乾燥',yomi:'かんそう',play:playDry,
+  fact:'剥いたばかりの単板は水分たっぷり。ドライヤーで含水率をおよそ10%前後まで乾かします。乾かしすぎや急な高温は割れ・反りの原因になります。',
+  how:'温度スライダーで乾くスピードを調整し、含水率が8〜12%のときに「取り出す！」。'},
+ {icon:'🔍',name:'選別',yomi:'せんべつ',play:playSort,
+  fact:'乾いた単板の節・割れ・穴をチェックして仕分けます。見た目のきれいな板は表板に、小さな節がある板は内側の心板に、割れや穴は補修（パッチ当て）してから使います。',
+  how:'表示される単板を見て、3つのボタンから正しい行き先を選ぼう。20秒で8枚！'},
+ {icon:'🧩',name:'組み立て',yomi:'のりづけ・せきそう',play:playLayup,
+  fact:'接着剤を塗った単板を、木目（繊維方向）が直角に交わるように重ねます（直交積層）。枚数を奇数にすると表と裏のバランスがとれ、反りにくく強い板になります。これが合板の強さのヒミツ！',
+  how:'「↻向き」で木目を回転、「🧴のり」で接着剤をON/OFF。ルール通りにそろえたら送り出そう（25秒）。'},
+ {icon:'🔥',name:'熱圧',yomi:'ねつあつ',play:playPress,
+  fact:'重ねた単板を冷たいプレスで仮接着したあと、ホットプレスで熱（約120℃前後）と圧力をかけて接着剤をしっかり固めます。',
+  how:'ボタン連打で圧力アップ！緑のゾーンにいる間だけ接着が進みます。上げすぎると逆効果。'},
+ {icon:'✨',name:'仕上げ',yomi:'しあげ',play:playSand,
+  fact:'固まった合板の四辺を切りそろえ（トリミング）、表面をサンダーで研磨してなめらかに。検査で品質をチェックしたら出荷です！',
+  how:'パネルの上をなぞって表面をツルツルに磨き上げよう（8秒）。'},
+];
+let scores=[],cur=-1;
+const best=()=>{try{return+localStorage.getItem('plywood-best')||0}catch(e){return 0}};
+const saveBest=v=>{try{if(v>best())localStorage.setItem('plywood-best',v)}catch(e){}};
+
+function renderSteps(){
+  stepsEl.innerHTML=STAGES.map((s,i)=>`<span class="step ${scores[i]!=null?'done':i===cur?'now':''}">${s.icon}<small>${s.name}</small></span>`).join('');
+  totalEl.textContent=cur>=0?`合計 ${scores.reduce((a,b)=>a+(b||0),0)} 点`:'';
+}
+function showTitle(){
+  runCleanups();cur=-1;scores=[];renderSteps();
+  screen.innerHTML=`<section class="card"><h2>ようこそ、合板工場へ！</h2>
+  <p>1本の丸太が、家や家具に使われる「合板（ごうはん）」になるまでの8つの工程を、ミニゲームで体験しよう。各工程100点満点・合計800点で、あなたの職人ランクが決まります。</p>
+  <div class="flow">${STAGES.map((s,i)=>`<span>${i+1}. ${s.icon} ${s.name}</span>`).join('')}</div>
+  <div class="ply">${'<div></div>'.repeat(5)}</div>
+  ${best()?`<p style="text-align:center">🏆 ベストスコア：${best()} 点</p>`:''}
+  <button class="big" id="go">🏭 工場に入る</button></section>`;
+  document.getElementById('go').onclick=()=>showIntro(0);
+}
+function showIntro(i){
+  runCleanups();cur=i;renderSteps();const s=STAGES[i];
+  screen.innerHTML=`<section class="card"><div class="stage-no">工程 ${i+1} / ${STAGES.length}</div>
+  <h2>${s.icon} ${s.name}<span class="yomi">${s.yomi}</span></h2>
+  <div class="fact"><b>🏭 実際の工場では</b><p>${s.fact}</p></div>
+  <div class="how"><b>🎮 あそびかた</b><p>${s.how}</p></div>
+  <button class="big" id="go">スタート！</button></section>`;
+  document.getElementById('go').onclick=()=>startStage(i);
+}
+function startStage(i){
+  const s=STAGES[i];
+  screen.innerHTML=`<section class="card"><h2>${s.icon} ${s.name}</h2><div id="area"></div></section>`;
+  const area=document.getElementById('area');let fin=false;
+  s.play(area,(sc,note)=>{if(fin)return;fin=true;runCleanups();finishStage(i,area,Math.round(clamp(sc,0,100)),note)});
+}
+function finishStage(i,area,sc,note){
+  scores[i]=sc;renderSteps();area.querySelectorAll('button,input').forEach(b=>b.disabled=true);
+  const stars=sc>=90?3:sc>=65?2:sc>=35?1:0,word=['もう一歩！','まずまず！','いい腕前！','職人技！'][stars];
+  const last=i===STAGES.length-1;
+  area.insertAdjacentHTML('beforeend',`<div class="result"><div>${word}</div><div class="sc">${sc} 点</div>
+    <div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</div><div>${note}</div>
+    <button class="big" id="next">${last?'🎉 完成品を見る':'次の工程へ ▶'}</button></div>`);
+  beep(stars>=2?1046:600,.2,'triangle');
+  const nx=document.getElementById('next');nx.scrollIntoView({behavior:'smooth',block:'center'});
+  nx.onclick=()=>last?showFinal():showIntro(i+1);
+}
+function showFinal(){
+  runCleanups();cur=STAGES.length;renderSteps();
+  const total=scores.reduce((a,b)=>a+b,0);saveBest(total);
+  const [rank,title,q]=total>=720?['S','伝説の合板マイスター','反りもすき間もない最高級品！']:total>=600?['A','一人前の合板職人','そのまま出荷できる高品質な合板！']
+    :total>=450?['B','頼れる見習い職人','十分使える合板ができました。']:total>=300?['C','新人オペレーター','ちょっと反りぎみ…でも完成！']:['D','工場見学者','合板…？ もう一度チャレンジ！'];
+  screen.innerHTML=`<section class="card"><h2>🎉 合板が完成しました！</h2>
+  <div class="ply">${'<div></div>'.repeat(5)}</div>
+  <div class="rank">${rank}</div><div class="title-rank">称号：${title}</div>
+  <p style="text-align:center;margin:0">${q}<br>総合 <b>${total}</b> / 800 点　🏆 ベスト ${best()} 点</p>
+  <table>${STAGES.map((s,i)=>`<tr><td>${s.icon} ${s.name}</td><td class="b"><div class="mini"><div style="width:${scores[i]}%"></div></div></td><td style="text-align:right">${scores[i]}点</td></tr>`).join('')}</table>
+  <div class="fact"><b>📦 豆知識</b><p>合板は木目を交互に重ねることで、無垢の板よりも反りや割れが起きにくく、どの方向にも強い材料になります。住宅の床・壁・屋根の下地や家具など、身近なところでたくさん使われています。</p></div>
+  <button class="big" id="again">🔁 もう一度つくる</button></section>`;
+  document.getElementById('again').onclick=showTitle;
+}
+showTitle();
+</script>
+</body>
+</html>
