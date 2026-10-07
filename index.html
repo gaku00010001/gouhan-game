@@ -93,6 +93,22 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .crack{position:absolute;height:4px;background:#3b2210;border-radius:2px;box-shadow:0 0 0 1px #6b4423}
 .hole{position:absolute;width:38px;height:32px;border-radius:50%;background:radial-gradient(#1d120a 55%,#6b4423 70%,transparent 75%)}
 .judge{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:5rem;font-weight:900;pointer-events:none}
+.line{position:relative;height:190px;margin:8px 0 10px;border-radius:12px;overflow:hidden;background:
+  repeating-linear-gradient(90deg,#5a524c 0 18px,#4a433e 18px 36px);box-shadow:inset 0 -10px 0 #333,inset 0 10px 0 #333}
+.endzone{position:absolute;left:0;top:0;bottom:0;width:7%;background:rgba(200,40,30,.35);color:#fff;font-size:.65rem;writing-mode:vertical-rl;display:flex;align-items:center;justify-content:center;z-index:3}
+.vsheet{position:absolute;top:20px;height:150px;width:34%;transition:transform .5s,opacity .5s}
+.vsheet .veneer{height:100%}
+.vsheet.target .veneer{box-shadow:0 0 0 4px #ffd34d,0 0 16px 4px #ffd34d}
+.vsheet .judge{font-size:3.6rem}
+.vsheet.to-A{transform:translateY(-130%);opacity:0}.vsheet.to-B{transform:translateY(130%);opacity:0}
+.vsheet.to-F{transform:translateY(130%) rotate(25deg);opacity:0}.vsheet.to-miss{transform:translateX(-70%);opacity:0}
+.tone{position:absolute;left:0;right:0;background:rgba(170,110,50,.18)}
+.rot{position:absolute;width:70px;height:46px;border-radius:45%;background:radial-gradient(#4b3a2a 30%,#6e5a44 60%,transparent 72%);opacity:.85}
+.patch{position:absolute;width:38px;height:32px;border-radius:50%;background:#f2d29b;box-shadow:0 0 0 2px #b98445}
+.hole{cursor:pointer}
+.hole::after{content:"🩹";position:absolute;right:-14px;top:-14px;font-size:16px}
+kbd{display:inline-block;margin-left:4px;padding:0 5px;border:1px solid #b9935a;border-radius:4px;font-size:.7rem;background:#fff6e2}
+@media (hover:none){kbd{display:none}}
 .sort-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .sort-btns button{padding:12px 4px;font-weight:700;background:var(--wood-l);box-shadow:0 3px 0 #c9a066}
 .sort-btns small{font-weight:400;font-size:.75rem}
@@ -119,19 +135,28 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .ipanel{position:relative;height:260px;border-radius:4px;touch-action:none;cursor:pointer;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.25);
   background:radial-gradient(ellipse 30% 12% at 30% 40%,rgba(180,120,60,.18),transparent),radial-gradient(ellipse 25% 10% at 75% 70%,rgba(150,95,45,.15),transparent),
   repeating-linear-gradient(0deg,#f3d9a8 0 7px,#ebcb92 7px 9px,#f6dfb2 9px 15px,#e6c287 15px 16px)}
-.spot{position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;display:flex;align-items:center;justify-content:center;border-radius:50%}
 .spot.found{box-shadow:0 0 0 3px var(--ok)}
 .spot.missed{box-shadow:0 0 0 3px var(--ng)}
 .spot .tag{position:absolute;top:100%;white-space:nowrap;font-size:.72rem;font-weight:700;background:#fff;padding:0 6px;border-radius:6px;pointer-events:none;z-index:2}
 .spot.missed .tag{color:var(--ng)}
 .miss{position:absolute;transform:translate(-50%,-50%);color:var(--ng);font-size:1.3rem;pointer-events:none}
-.d-pank{width:44px;height:34px;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,#fbe9c6 20%,#e9c690 55%,#c79a5c 75%,transparent 78%);box-shadow:2px 3px 4px rgba(90,55,20,.35)}
-.d-peel{width:56px;height:14px;background:linear-gradient(#f6dfb2 45%,#4a2d14 45%,#4a2d14 65%,#c99555 65%);transform:rotate(-2deg);border-radius:2px}
-.d-crack{width:52px;height:3px;background:#3b2210;border-radius:2px;transform:rotate(4deg)}
-.d-hole{width:18px;height:15px;border-radius:50%;background:radial-gradient(#1d120a 55%,#6b4423 72%,transparent 76%)}
-.d-chip{width:40px;height:40px;background:var(--card);clip-path:polygon(0 0,100% 0,0 100%)}
+.spot{position:absolute;width:48px;height:48px;margin:-24px 0 0 -24px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.ipanel.in{animation:pop .35s}
+.d-pank{width:30px;height:23px;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,#f8e4bd 25%,#ecca93 60%,transparent 74%);box-shadow:1px 2px 3px rgba(90,55,20,.22)}
+.d-peel{width:40px;height:8px;background:linear-gradient(#f3d9a8 45%,#7a5530 45%,#7a5530 62%,#d4a76a 62%);transform:rotate(-2deg);border-radius:2px;opacity:.85}
+.d-crack{width:40px;height:2px;background:#6b4423;border-radius:2px;transform:rotate(4deg)}
+.d-hole{width:11px;height:9px;border-radius:50%;background:radial-gradient(#3b2414 50%,#7a5530 70%,transparent 76%)}
+.d-chip{width:22px;height:22px;background:var(--card);clip-path:polygon(0 0,100% 0,0 100%)}
 .spot.corner{margin:0;align-items:flex-start;justify-content:flex-start;border-radius:0 0 50% 0}
-.d-rough{width:58px;height:40px;border-radius:40%;opacity:.75;background:radial-gradient(#a08a6e 1px,transparent 1.5px) 0 0/5px 5px,radial-gradient(#8e7658 1px,transparent 1.5px) 2px 3px/6px 6px}
+.d-rough{width:44px;height:30px;border-radius:40%;opacity:.5;background:radial-gradient(#a08a6e 1px,transparent 1.5px) 0 0/5px 5px,radial-gradient(#8e7658 1px,transparent 1.5px) 2px 3px/6px 6px}
+.decoy{position:absolute;transform:translate(-50%,-50%)}
+.dk-tone{width:90px;height:34px;border-radius:50%;background:radial-gradient(ellipse,rgba(170,110,50,.22),transparent 70%)}
+.dk-streak{width:70px;height:5px;border-radius:3px;background:linear-gradient(90deg,transparent,rgba(130,85,40,.38),transparent);filter:blur(.6px)}
+.dk-spot{width:26px;height:20px;border-radius:50%;background:radial-gradient(ellipse,rgba(255,240,210,.75),transparent 70%)}
+.jbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.jbtns button{padding:12px 4px;font-weight:800;font-size:1.05rem;box-shadow:0 3px 0 rgba(0,0,0,.2)}
+.jbtns small{font-weight:400;font-size:.75rem}
+.okb{background:#d7e8d2}.ngb{background:#f4d0cb}
 .glues{display:grid;gap:6px}
 .glues button{text-align:left;padding:8px 12px;background:#fff;border:2px solid var(--line)}
 .glues button.on{border-color:var(--accent);background:#fff3dc}
@@ -229,22 +254,22 @@ const GRANK={'特類':3,'1類':2,'2類':1};
 // 注文ごとのミニゲームの違い（notes は各工程の説明画面に表示）
 const VARIANT={
  kozo:{log:8,cuts:[2,4,6],saw:30,sawUp:14,bark:'stripe',barkHp:1,barkTime:10,peelZone:20,drift:1,knotHits:false,
-  dryStart:70,dryRate:1,crackT:165,sortMix:'AAABBBXX',sortTime:20,smallKnot:false,layTime:40,pressNeed:7,leak:1,inspN:4,inspTime:15,
+  dryStart:70,dryRate:1,crackT:165,sortMix:'AAABBBHHRR',belt:14,gap:2.4,smallKnot:false,layTime:40,pressNeed:7,leak:1,inspN:5,inspPanels:3,inspTime:9,
   notes:['長さ8mの原木を、約2mずつ切る回数は原木の長さで変わります。','樹皮が細長くはがれるタイプの原木です（10秒）。','単板の厚さの目安は約2.4mm。基本の剥き方をマスターしよう。',
-   '厚めの単板（約2.4mm）なので、乾くまでに少し時間がかかります。','単板8枚を20秒で仕分けます。','5プライの構成です（40秒）。',
-   '厚さ12mmの板は、接着剤が中まで固まるのに時間がかかります（ゾーン内で約7秒）。','不良は4か所（15秒）。']},
+   '厚めの単板（約2.4mm）なので、乾くまでに少し時間がかかります。','単板10枚が流れてきます。穴あき・燃料行きの単板もまんべんなく混ざっています。','5プライの構成です（40秒）。',
+   '厚さ12mmの板は、接着剤が中まで固まるのに時間がかかります（ゾーン内で約7秒）。','合板3枚を検査。不良は全部で5か所、1枚9秒で判定します。']},
  kata:{log:6,cuts:[2,4],saw:38,sawUp:16,bark:'thick',barkHp:2,barkTime:12,peelZone:20,drift:1.15,knotHits:true,
-  dryStart:80,dryRate:1,crackT:165,sortMix:'AAABBBBBXX',sortTime:24,smallKnot:false,layTime:40,pressNeed:7,leak:1.3,inspN:4,inspTime:15,
+  dryStart:80,dryRate:1,crackT:165,sortMix:'AAABBBBBHHHR',belt:15,gap:2.3,smallKnot:false,layTime:40,pressNeed:7,leak:1.3,inspN:5,inspPanels:3,inspTime:8,
   notes:['長さ6mの原木を2回切ります。ノコの動きが速めなので注意！','樹皮が厚い原木です。同じ場所を2回こすらないとはがれません（12秒）。',
    '節の多い原木です。ときどき刃が節に当たって、厚さが急に乱れます。','水分の多い単板（含水率80%から）です。乾くまでに時間がかかります。',
-   '型枠用は、内側に使える節のある単板が多め。10枚を24秒で仕分けます。','5プライの構成です（40秒）。',
-   '厚さ12mm（ゾーン内で約7秒）。今回のプレス機は圧力が抜けやすいので、連打のペースを上げよう。','不良は4か所（15秒）。']},
+   '型枠用は、内側に使える節あり・穴あきの単板が多め。12枚が少し速めに流れてきます。','5プライの構成です（40秒）。',
+   '厚さ12mm（ゾーン内で約7秒）。今回のプレス機は圧力が抜けやすいので、連打のペースを上げよう。','合板3枚を検査。不良は全部で5か所、1枚8秒と少し短めです。']},
  futsu:{log:10,cuts:[2,4,6,8],saw:26,sawUp:8,bark:'thin',barkHp:1,barkTime:8,peelZone:15,drift:.85,knotHits:false,
-  dryStart:60,dryRate:1.4,crackT:155,sortMix:'AAABBBXX',sortTime:20,smallKnot:true,layTime:30,pressNeed:5,leak:1,inspN:5,inspTime:18,
+  dryStart:60,dryRate:1.4,crackT:155,sortMix:'AAAABBBHHR',belt:12,gap:2.6,smallKnot:true,layTime:30,pressNeed:5,leak:1,inspN:6,inspPanels:4,inspTime:8,
   notes:['長さ10mの長い原木を、約2mずつ4回切ります。','樹皮が薄い原木です。そのかわり制限時間は8秒！',
    '薄い単板（約1.8mm）は、厚さの許容範囲がせまくなります。','薄い単板は早く乾きますが、熱に弱く155℃を超えると割れやすくなります。',
-   '室内用は見た目が大事。小さな節も見逃さないように（8枚・20秒）。','3プライの構成です（30秒）。',
-   '厚さ5.5mmの薄い板は、短い時間で固まります（ゾーン内で約5秒）。素早く圧力を上げよう。','室内用は見た目が大事。不良は5か所（18秒）。']},
+   '室内用は見た目が大事。小さな節も見逃さないように（10枚・ゆっくりめ）。','3プライの構成です（30秒）。',
+   '厚さ5.5mmの薄い板は、短い時間で固まります（ゾーン内で約5秒）。素早く圧力を上げよう。','室内用は見た目が大事。合板4枚・不良は全部で6か所、1枚8秒で判定します。']},
 };
 const V=()=>VARIANT[G.order.id];
 let G;
@@ -374,29 +399,58 @@ function playDry(area,done){
 }
 
 function playSort(area,done){
-  const cf=V(),types=shuffle([...cf.sortMix]),N=types.length,ST=cf.sortTime,name={A:'表板',B:'心板',X:'補修行き'};
-  area.innerHTML=`<div class="hud"><span class="tm"></span><span class="cnt"></span></div>
-  <div class="vstage"><div class="veneer"></div><div class="judge"></div></div>
-  <div class="sort-btns"><button data-g="A">✨ 表板<br><small>きれい・欠点なし</small></button><button data-g="B">🟤 心板<br><small>小さな節がある</small></button><button data-g="X">🩹 補修行き<br><small>割れ・穴がある</small></button></div>
-  <div class="msg">単板をよく見て仕分けよう！（${ST}秒で${N}枚）${cf.smallKnot?'　小さな節にも注意！':''}</div>`;
-  const g=s=>area.querySelector(s),vn=g('.veneer'),jd=g('.judge'),tm=g('.tm'),cnt=g('.cnt'),msg=g('.msg');
+  // 選別ライン：コンベアで流れてくる単板を、流れ切る前に仕分ける。穴はタップでパッチ補修してから心板へ
+  const cf=V(),types=shuffle([...cf.sortMix]),N=types.length;
+  const BIN={A:'表板',B:'心板',F:'燃料行き'},want=t=>t==='A'?'A':t==='R'?'F':'B';
+  const WHY={A:'欠点のない単板は、見える面の表板（裏板）に使います。',B:'小さな節は強さへの影響が小さく、内側の心板に回せます。',
+    H:'穴はパッチで補修すれば、心板として使えます。',R:'大きな割れや腐れのある単板は合板に使えないので、チップやボイラーの燃料として活用します。'};
+  area.innerHTML=`<div class="hud"><span class="cnt"></span><span class="cb"></span></div>
+  <div class="line"><div class="endzone">◀ ここまでに仕分け</div></div>
+  <div class="sort-btns"><button data-g="A">✨ 表板<br><small>欠点なし</small><kbd>1</kbd></button>
+    <button data-g="B">🟤 心板<br><small>小さな節・補修済み</small><kbd>2</kbd></button>
+    <button data-g="F">🔥 燃料行き<br><small>大きな割れ・腐れ</small><kbd>3</kbd></button></div>
+  <div class="msg">光っている単板（いちばん左）が仕分けの対象です。穴は🩹タップで補修してから心板へ！色の濃淡は欠点ではありません。</div>`;
+  const g=s=>area.querySelector(s),line=g('.line'),cnt=g('.cnt'),cb=g('.cb'),msg=g('.msg');
   const R=(a,b)=>a+Math.random()*(b-a);
   // 室内用（smallKnot）は節が小さく数も少ないので、見落としやすい
-  const knot=()=>cf.smallKnot?`<i class="knot" style="left:${R(6,88)}%;top:${R(12,75)}%;width:${R(9,13)}px;height:${R(7,10)}px"></i>`
-    :`<i class="knot" style="left:${R(6,88)}%;top:${R(12,75)}%;width:${R(14,22)}px;height:${R(10,15)}px"></i>`;
-  function feat(t){let h='';if(t==='B')for(let k=0,n=(cf.smallKnot?1:2)+(Math.random()*(cf.smallKnot?2:3)|0);k<n;k++)h+=knot();
-    if(t==='X'){h+=Math.random()<.5?`<i class="crack" style="left:${R(5,40)}%;top:${R(20,75)}%;width:${R(35,55)}%;transform:rotate(${R(-3,3)}deg)"></i>`
-      :`<i class="hole" style="left:${R(15,75)}%;top:${R(20,60)}%"></i>`;if(Math.random()<.5)h+=knot()}return h}
-  const why={A:'欠点のないきれいな単板は、見える面の表板（裏板）に使います。',B:'小さな節は強さへの影響が小さく、見えない内側の心板に回せます。',X:'割れや穴はそのままだと弱点になるので、補修（パッチ）してから使います。'};
-  let i=0,ok=0,t=ST,end=false;
-  const show=()=>{vn.innerHTML=feat(types[i]);cnt.textContent=`${i+1} / ${N}`;vn.classList.remove('in');void vn.offsetWidth;vn.classList.add('in')};
-  const finish=()=>{if(end)return;end=true;done(ok/N*100,`正解 ${ok} / ${N}枚`)};
-  area.querySelectorAll('.sort-btns button').forEach(b=>b.onclick=()=>{if(end)return;const right=b.dataset.g===types[i];
-    if(right){ok++;jd.textContent='⭕';jd.style.color='var(--ok)';msg.textContent='正解！'+why[types[i]];beep(880,.1,'triangle')}
-    else{jd.textContent='❌';jd.style.color='var(--ng)';msg.textContent=`ざんねん…正しくは「${name[types[i]]}」。${why[types[i]]}`;beep(200,.15,'square',.03)}
-    setTimeout(()=>jd.textContent='',350);i++;i>=N?finish():show()});
-  show();
-  loop(dt=>{t-=dt;tm.textContent=`残り ${Math.max(0,t).toFixed(1)}秒`;if(t<=0){finish();return false}});
+  const knot=()=>cf.smallKnot?`<i class="knot" style="left:${R(8,85)}%;top:${R(12,75)}%;width:${R(8,11)}px;height:${R(6,9)}px"></i>`
+    :`<i class="knot" style="left:${R(8,85)}%;top:${R(12,75)}%;width:${R(12,18)}px;height:${R(9,13)}px"></i>`;
+  const tone=()=>`<i class="tone" style="top:${R(5,60)}%;height:${R(15,35)}%"></i>`;
+  function feat(t){let h=Math.random()<.4?tone():'';
+    if(t==='B')for(let k=0,n=(cf.smallKnot?1:2)+(Math.random()*(cf.smallKnot?2:2)|0);k<n;k++)h+=knot();
+    if(t==='H'){h+=`<i class="hole" style="left:${R(15,70)}%;top:${R(20,55)}%"></i>`;if(Math.random()<.4)h+=knot()}
+    if(t==='R'){h+=`<i class="crack" style="left:${R(3,15)}%;top:${R(25,70)}%;width:${R(65,85)}%;transform:rotate(${R(-3,3)}deg)"></i>`;
+      if(Math.random()<.6)h+=`<i class="rot" style="left:${R(10,60)}%;top:${R(10,45)}%"></i>`}
+    return h}
+  const sheets=[];let spawned=0,fin=0,ok=0,combo=0,maxCombo=0,next=0,t=0,gap=cf.gap,end=false;
+  const upd=()=>{cnt.textContent=`仕分け ${fin} / ${N}枚`;cb.textContent=combo>=2?`🔥 ${combo}コンボ！`:`最大コンボ ${maxCombo}`};upd();
+  function spawn(){const type=types[spawned++],el=document.createElement('div');el.className='vsheet';
+    el.innerHTML=`<div class="veneer">${feat(type)}</div><div class="judge"></div>`;line.appendChild(el);
+    const s={el,type,x:100,patched:false,live:true};sheets.push(s);
+    const hole=el.querySelector('.hole');
+    if(hole)hole.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(!s.live||s.patched)return;
+      s.patched=true;hole.className='patch';beep(700,.08,'triangle');msg.textContent='🩹 パッチで穴を補修！ 補修した単板は心板として使えます。'})}
+  const target=()=>sheets.find(s=>s.live);
+  function judge(s,bin){s.live=false;fin++;let pts=0,txt;const w=want(s.type);
+    if(bin===null)txt=`⏰ 見逃し！ 正しくは「${BIN[w]}」。${WHY[s.type]}`;
+    else if(s.type==='H'){if(bin==='B'&&s.patched){pts=1;txt='⭕ 補修してから心板へ。完ぺき！'}
+      else if(bin==='B'){pts=.5;txt='△ 心板でOK。でも穴をパッチで補修してから使おう！'}
+      else if(bin==='A')txt='❌ 穴のある単板は表板にできません。補修して心板へ。';else txt='❌ もったいない！穴はパッチで補修すれば使えます。'}
+    else if(bin===w){pts=1;txt='⭕ '+WHY[s.type]}else txt=`❌ 正しくは「${BIN[w]}」。${WHY[s.type]}`;
+    ok+=pts;if(pts===1){combo++;maxCombo=Math.max(maxCombo,combo)}else combo=0;
+    const j=s.el.querySelector('.judge');j.textContent=pts===1?'⭕':pts?'△':'❌';j.style.color=pts===1?'var(--ok)':pts?'var(--warn)':'var(--ng)';
+    s.el.classList.add('target','to-'+(bin||'miss'));setTimeout(()=>s.el.remove(),650);
+    msg.textContent=txt;beep(pts===1?880+Math.min(combo,8)*40:pts?500:200,.1,pts?'triangle':'square',pts?.05:.03);upd();
+    if(fin>=N&&!end){end=true;setTimeout(()=>done(ok/N*90+Math.min(10,maxCombo/N*10),`正解 ${Math.round(ok*10)/10} / ${N}枚・最大コンボ ${maxCombo}`),500)}}
+  const sortTo=bin=>{const s=target();if(s&&!end)judge(s,bin)};
+  area.querySelectorAll('.sort-btns button').forEach(b=>b.onclick=()=>sortTo(b.dataset.g));
+  const key=e=>{const m={Digit1:'A',Digit2:'B',Digit3:'F',Numpad1:'A',Numpad2:'B',Numpad3:'F'}[e.code];if(m&&!e.repeat){e.preventDefault();sortTo(m)}};
+  addEventListener('keydown',key);addCleanup(()=>removeEventListener('keydown',key));
+  loop(dt=>{t+=dt;
+    if(spawned<N&&t>=next){spawn();next=t+gap;gap=Math.max(1.3,gap*.95)}
+    for(const s of sheets)if(s.live){s.x-=cf.belt*dt;s.el.style.left=s.x+'%';if(s.x<-1)judge(s,null)}
+    const tg=target();for(const s of sheets)if(s.live)s.el.classList.toggle('target',s===tg);
+    if(end)return false});
 }
 
 function playLayup(area,done){
@@ -477,33 +531,56 @@ const DEFECTS={
   rough:{name:'研磨むら',why:'サンダーが当たらず、表面がざらついたまま残っています。'},
 };
 function playInspect(area,done){
+  // 出荷前検査：合板が1枚ずつ流れてくる。不良をタップで指摘してから「合格／不合格」を判定する
+  const cf=V(),P=cf.inspPanels,D=cf.inspN,PT=cf.inspTime;
   // 前の工程の結果に応じて、起きやすい不良を必ず混ぜる
   const must=[];if(G.moisture!=null&&G.moisture>12)must.push('pank');if(G.glueOK===false||G.scores[6]<60)must.push('peel');
   if(G.moisture!=null&&G.moisture<8)must.push('crack');
-  const list=[...new Set([...must,...shuffle(Object.keys(DEFECTS).filter(k=>!must.includes(k)))])].slice(0,V().inspN);
-  const spots=[];
-  const place=k=>{if(k==='chip')return[0,0];
-    for(let n=0;n<50;n++){const p=[8+Math.random()*84,14+Math.random()*72];if(spots.every(s=>Math.hypot((s[0]-p[0])*2.4,s[1]-p[1])>26))return p}return[50,50]};
-  list.forEach(k=>spots.push(place(k)));
-  area.innerHTML=`<div class="hud"><span class="tm"></span><span class="fd"></span></div>
-  <div class="ipanel">${list.map((k,n)=>`<div class="spot${k==='chip'?' corner':''}" data-n="${n}" style="left:${spots[n][0]}%;top:${spots[n][1]}%"><i class="d-${k}"></i></div>`).join('')}</div>
-  <div class="msg">トリミングと研磨が終わった合板です。出荷前の検査で、不良を<b>${list.length}か所</b>見つけてタップしよう！（${V().inspTime}秒・関係ない所をタップすると減点）</div>`;
-  const pan=area.querySelector('.ipanel'),tm=area.querySelector('.tm'),fd=area.querySelector('.fd'),msg=area.querySelector('.msg');
-  let found=0,miss=0,t=V().inspTime,end=false;
-  const upd=()=>fd.textContent=`発見 ${found} / ${list.length}　ミス ${miss}`;upd();
-  const finish=()=>{if(end)return;end=true;
-    pan.querySelectorAll('.spot:not(.found)').forEach(s=>{s.classList.add('missed');s.insertAdjacentHTML('beforeend',`<span class="tag">見逃し：${DEFECTS[list[+s.dataset.n]].name}</span>`)});
-    done(found/list.length*100-miss*5,`発見 ${found}/${list.length}か所・ミスタップ ${miss}回`)};
-  pan.addEventListener('pointerdown',e=>{if(end)return;e.preventDefault();
+  const kinds=[...new Set([...must,...shuffle(Object.keys(DEFECTS).filter(k=>!must.includes(k)))])];
+  const list=shuffle(Array.from({length:D},(_,k)=>kinds[k%kinds.length]));
+  // 不良を合板に振り分ける（不良のない合板がまざることもある）
+  const good=Math.random()<.65?Math.random()*P|0:-1,panels=Array.from({length:P},()=>[]);
+  list.forEach(k=>{let p;do{p=Math.random()*P|0}while(p===good);
+    if(k==='chip'&&panels[p].includes('chip'))k='rough';panels[p].push(k)});
+  area.innerHTML=`<div class="hud"><span class="pn"></span><span class="tm"></span><span class="fd"></span></div>
+  <div class="ipanel"></div>
+  <div class="jbtns"><button class="okb">✅ 合格<br><small>不良なし</small></button><button class="ngb">❌ 不合格<br><small>不良あり</small></button></div>
+  <div class="msg">不良をタップして指摘してから、合格か不合格かを判定しよう。色の濃淡や木目の流れは不良ではありません。</div>`;
+  const g=s=>area.querySelector(s),pan=g('.ipanel'),pn=g('.pn'),tm=g('.tm'),fd=g('.fd'),msg=g('.msg');
+  const R=(a,b)=>a+Math.random()*(b-a);
+  let pi=-1,t=PT,found=0,missP=0,busy=true,end=false,sum=0,right=0,allFound=0,allMiss=0;
+  const upd=()=>{fd.textContent=`指摘 ${found}か所・ミス ${missP}`};
+  function show(){pi++;if(pi>=P){finish();return}
+    const ds=panels[pi],spots=[];found=0;missP=0;t=PT;
+    const place=k=>{if(k==='chip')return[0,0];
+      for(let n=0;n<60;n++){const p=[8+R(0,84),14+R(0,72)];if(spots.every(s=>Math.hypot((s[0]-p[0])*2.4,s[1]-p[1])>24))return p}return[50,50]};
+    const html=ds.map((k,n)=>{const p=place(k);spots.push(p);return`<div class="spot${k==='chip'?' corner':''}" data-n="${n}" style="left:${p[0]}%;top:${p[1]}%"><i class="d-${k}"></i></div>`}).join('');
+    // まぎらわしいけれど不良ではない模様（色むら・濃い木目・明るい斑点）
+    const decoys=Array.from({length:3+(Math.random()*2|0)},()=>{const p=place('x');spots.push(p);
+      return`<i class="decoy dk-${pick(['tone','streak','spot'])}" style="left:${p[0]}%;top:${p[1]}%"></i>`}).join('');
+    pan.innerHTML=decoys+html;pan.classList.remove('in');void pan.offsetWidth;pan.classList.add('in');
+    pn.textContent=`${pi+1}枚目 / ${P}枚`;upd();busy=false}
+  pan.addEventListener('pointerdown',e=>{if(busy||end)return;e.preventDefault();
     const s=e.target.closest('.spot');
-    if(s&&!s.classList.contains('found')){const d=DEFECTS[list[+s.dataset.n]];s.classList.add('found');found++;
-      s.insertAdjacentHTML('beforeend',`<span class="tag">${d.name}</span>`);msg.innerHTML=`⭕ 「${d.name}」を発見！ ${d.why}`;beep(880,.1,'triangle');upd();
-      if(found===list.length)setTimeout(finish,400);return}
+    if(s&&!s.classList.contains('found')){const d=DEFECTS[panels[pi][+s.dataset.n]];s.classList.add('found');found++;allFound++;
+      s.insertAdjacentHTML('beforeend',`<span class="tag">${d.name}</span>`);msg.innerHTML=`⭕ 「${d.name}」を発見！ ${d.why}`;beep(880,.1,'triangle');upd();return}
     if(s)return;
-    const r=pan.getBoundingClientRect();miss++;upd();beep(200,.12,'square',.03);
+    const r=pan.getBoundingClientRect();missP++;allMiss++;upd();beep(200,.12,'square',.03);
     pan.insertAdjacentHTML('beforeend',`<b class="miss" style="left:${(e.clientX-r.left)/r.width*100}%;top:${(e.clientY-r.top)/r.height*100}%">✕</b>`);
-    msg.textContent='❌ そこは問題なし！木目や色の違いは不良ではありません。';});
-  loop(dt=>{t-=dt;tm.textContent=`残り ${Math.max(0,t).toFixed(1)}秒`;if(t<=0){finish();return false}});
+    msg.textContent=e.target.classList.contains('decoy')?'❌ それは色むら・木目の模様で、不良ではありません。':'❌ そこは問題なし！'});
+  function judge(pass){if(busy)return;busy=true;const n=panels[pi].length;let sc,txt;
+    if(pass===null){sc=0;txt='⏰ 時間切れ…判定できませんでした。'}
+    else if(n===0){sc=pass?100:0;txt=pass?'⭕ 正しく合格！ 不良のない良品でした。':'❌ この合板に不良はありませんでした。良品をはねると材料のムダになります。'}
+    else{sc=pass?0:found/n*60+40;txt=pass?`❌ 不良品を出荷してしまった！（不良 ${n}か所）`:`⭕ 不合格の判定は正解！ 不良 ${found}/${n}か所を指摘。`}
+    if((pass===true&&n===0)||(pass===false&&n>0))right++;
+    sc=Math.max(0,sc-missP*8);sum+=sc;
+    pan.querySelectorAll('.spot:not(.found)').forEach(s=>{s.classList.add('missed');s.insertAdjacentHTML('beforeend',`<span class="tag">見逃し：${DEFECTS[panels[pi][+s.dataset.n]].name}</span>`)});
+    msg.textContent=txt;beep(sc>=60?988:220,.15,sc>=60?'triangle':'square',.03);
+    setTimeout(show,n&&found<n?2200:1300)}
+  g('.okb').onclick=()=>judge(true);g('.ngb').onclick=()=>judge(false);
+  function finish(){if(end)return;end=true;done(sum/P,`判定の正解 ${right}/${P}枚・不良の指摘 ${allFound}/${D}か所・ミスタップ ${allMiss}回`)}
+  show();
+  loop(dt=>{if(end)return false;if(!busy){t-=dt;if(t<=0)judge(null)}tm.textContent=`残り ${Math.max(0,t).toFixed(1)}秒`});
 }
 
 /* ===== 工程データ（解説・クイズ） ===== */
@@ -529,9 +606,9 @@ const STAGES=[
   points:['含水率＝木に含まれる水分の重さ÷乾いた木の重さ','単板はおよそ10%前後まで乾かしてから接着する','乾き不足 → 熱圧で水分が蒸気になり「パンク（膨れ・はく離）」が起こりやすい','乾かしすぎ・高温すぎ → 割れや反り、接着不良の原因'],
  },
  {icon:'🔍',name:'選別',yomi:'せんべつ・ほしゅう',play:playSort,
-  fact:'乾いた単板の節・割れ・穴をチェックして仕分けます。きれいな単板は表板・裏板に、小さな節がある単板は内側の心板に。割れや穴は補修（パッチ）し、幅の狭い単板はつなぎ合わせて（剥ぎ合わせ）1枚の大きさにします。',
-  how:'表示される単板を見て、3つのボタンから正しい行き先を選ぼう。時間内に全部仕分けられるかな？',
-  points:['見える面（表板）の見た目が、合板の板面の品質を決める','小さな節のある単板は内側（心板）に回してムダなく使う','穴は「パッチ（埋め木）」で補修してから使う','幅の狭い単板をつなぐ工程を「剥ぎ合わせ」（機械：コンポーザーなど）という'],
+  fact:'乾いた単板の節・割れ・穴をチェックして仕分けます。きれいな単板は表板・裏板に、小さな節がある単板は内側の心板に。穴は補修（パッチ）して使い、大きな割れや腐れがあって合板に使えない単板は、チップやボイラーの燃料として活用します。幅の狭い単板はつなぎ合わせて（剥ぎ合わせ）1枚の大きさにします。',
+  how:'ベルトコンベアで次々に流れてくる単板を、流れ切る前に「表板・心板・燃料行き」に仕分けよう。穴のある単板は、穴をタップしてパッチで補修してから心板へ！連続で正解するとコンボになります。',
+  points:['見える面（表板）の見た目が、合板の板面の品質を決める','小さな節のある単板は内側（心板）に回してムダなく使う','穴は「パッチ（埋め木）」で補修してから使う','大きな割れや腐れのある、使えない単板もムダにせず、チップや燃料として活用する','幅の狭い単板をつなぐ工程を「剥ぎ合わせ」（機械：コンポーザーなど）という'],
  },
  {icon:'🧩',name:'組み立て',yomi:'のりづけ・せきそう',play:playLayup,
   fact:'グルースプレッダーで単板に接着剤を塗り、木目（繊維方向）が直角に交わるように重ねます（直交積層）。表と裏が対称になるよう奇数枚で重ねるのが基本です。使い道に合わせて、耐水性の違う接着剤（特類・1類・2類）を選びます。',
@@ -545,8 +622,8 @@ const STAGES=[
  },
  {icon:'✨',name:'仕上げ・検査',yomi:'しあげ・けんさ',play:playInspect,
   fact:'固まった合板の四辺を切りそろえ（トリミング）、用途に応じて表面をサンダーで研磨します。最後に検査を行い、膨れ・はく離・割れなどの不良がないかを確かめます。JAS（日本農林規格）の格付けを受けた製品にはJASマークが表示されて出荷されます。',
-  how:'出荷前の合板の中から、不良（膨れ・はく離・割れ・節抜けなど）を見つけてタップしよう。前の工程で失敗すると、それが原因の不良が出てきます。',
-  points:['四辺の切りそろえ＝トリミング、表面の研磨＝サンダー','検査で見る主な不良：パンク（膨れ）・はく離・割れ・節抜け・角欠け・研磨むら','不良の多くは前の工程に原因がある（含水率が高い→パンク、接着不良→はく離 など）','JAS（日本農林規格）では、合板の含水率は14%以下などの基準がある','ホルムアルデヒド放散量は F☆☆☆☆（フォースター）が最も少ない区分','主な種類：構造用合板（建物の下地）、コンクリート型枠用合板（コンパネ）、普通合板 など'],
+  how:'合板が1枚ずつ流れてきます。不良（膨れ・はく離・割れ・節抜けなど）をタップで指摘してから、「合格／不合格」を判定しよう。不良のない良品もまざっています。前の工程で失敗すると、それが原因の不良が出てきます。',
+  points:['四辺の切りそろえ＝トリミング、表面の研磨＝サンダー','検査で見る主な不良：パンク（膨れ）・はく離・割れ・節抜け・角欠け・研磨むら','不良の多くは前の工程に原因がある（含水率が高い→パンク、接着不良→はく離 など）','不良品を出荷しないことも、良品をむやみにはねないことも、どちらも検査の大切な役目','JAS（日本農林規格）では、合板の含水率は14%以下などの基準がある','ホルムアルデヒド放散量は F☆☆☆☆（フォースター）が最も少ない区分','主な種類：構造用合板（建物の下地）、コンクリート型枠用合板（コンパネ）、普通合板 など'],
  },
 ];
 
