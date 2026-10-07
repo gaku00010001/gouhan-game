@@ -183,6 +183,9 @@ kbd{display:inline-block;margin-left:4px;padding:0 5px;border:1px solid #b9935a;
 .steam{position:absolute;left:0;right:0;top:40%;text-align:center;font-size:1.6rem;opacity:0;transition:.3s}
 .progress{height:16px;background:#e0cfb3;border-radius:8px;overflow:hidden;margin-top:8px}
 .progress div{height:100%;width:0;background:var(--ok)}
+.pcv{cursor:ns-resize}
+.pbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.pbtns button{padding:14px;font-weight:800;font-size:1.05rem;background:var(--wood-l);box-shadow:0 3px 0 #c9a066;touch-action:none}
 /* 結果・クイズ */
 .result{margin-top:14px;padding:14px;border-radius:12px;background:#fff3dc;border:2px solid var(--wood);animation:pop .3s}
 .result .head{text-align:center}
@@ -271,19 +274,19 @@ const VARIANT={
   dryStart:70,dryRate:1,crackT:165,sortMix:'AAABBBHHRR',belt:14,gap:2.4,smallKnot:false,layTime:40,pressNeed:7,leak:1,inspN:5,inspPanels:3,inspTime:9,
   notes:['長さ8mの原木を、約2mずつ切る回数は原木の長さで変わります。','樹皮が細長くはがれるタイプの原木です（10秒）。','単板の厚さの目安は約2.4mm。基本の剥き方をマスターしよう。',
    '厚めの単板（約2.4mm）3枚を同時に乾かします。乾くまでに少し時間がかかります。','単板10枚が流れてきます。穴あき・燃料行きの単板もまんべんなく混ざっています。','5プライの構成です（40秒）。',
-   '厚さ12mmの板は、接着剤が中まで固まるのに時間がかかります（ゾーン内で約7秒）。','合板3枚を検査。不良は全部で5か所、1枚9秒で判定します。']},
+   '厚さ12mmの板は、接着剤が中まで固まるのに時間がかかるので、保圧（圧力を保つ時間）が長めです。','合板3枚を検査。不良は全部で5か所、1枚9秒で判定します。']},
  kata:{log:6,cuts:[2,4],saw:38,sawUp:16,bark:'thick',barkHp:2,barkTime:12,peelZone:17,drift:1.15,knotHits:true,
   dryStart:80,dryRate:1,crackT:165,sortMix:'AAABBBBBHHHR',belt:15,gap:2.3,smallKnot:false,layTime:40,pressNeed:7,leak:1.3,inspN:5,inspPanels:3,inspTime:8,
   notes:['長さ6mの原木を2回切ります。ノコの動きが速めなので注意！','樹皮が厚い原木です。同じ場所を2回こすらないとはがれません（12秒）。',
    '節の多い原木です。ときどき刃が節に当たって、厚さが急に乱れます。','水分の多い単板（含水率80%前後から）3枚です。乾くまでに時間がかかります。',
    '型枠用は、内側に使える節あり・穴あきの単板が多め。12枚が少し速めに流れてきます。','5プライの構成です（40秒）。',
-   '厚さ12mm（ゾーン内で約7秒）。今回のプレス機は圧力が抜けやすいので、連打のペースを上げよう。','合板3枚を検査。不良は全部で5か所、1枚8秒と少し短めです。']},
+   '厚さ12mmで保圧は長め。今回のプレス機は油圧が下がりやすいので、こまめに補正しよう。','合板3枚を検査。不良は全部で5か所、1枚8秒と少し短めです。']},
  futsu:{log:10,cuts:[2,4,6,8],saw:26,sawUp:8,bark:'thin',barkHp:1,barkTime:8,peelZone:13,drift:.85,knotHits:false,
   dryStart:60,dryRate:1.25,crackT:155,sortMix:'AAAABBBHHR',belt:12,gap:2.6,smallKnot:true,layTime:30,pressNeed:5,leak:1,inspN:6,inspPanels:4,inspTime:8,
   notes:['長さ10mの長い原木を、約2mずつ4回切ります。','樹皮が薄い原木です。そのかわり制限時間は8秒！',
    '薄い単板（約1.8mm）は、厚さの許容範囲がせまくなります。','薄い単板3枚。早く乾くぶん取り出すタイミングがシビアで、熱に弱く155℃を超えると割れやすくなります。',
    '室内用は見た目が大事。小さな節も見逃さないように（10枚・ゆっくりめ）。','3プライの構成です（30秒）。',
-   '厚さ5.5mmの薄い板は、短い時間で固まります（ゾーン内で約5秒）。素早く圧力を上げよう。','室内用は見た目が大事。合板4枚・不良は全部で6か所、1枚8秒で判定します。']},
+   '厚さ5.5mmの薄い板は短い時間で固まるので、保圧が短く、すぐに減圧へ切り替わります。','室内用は見た目が大事。合板4枚・不良は全部で6か所、1枚8秒で判定します。']},
 };
 const V=()=>VARIANT[G.order.id];
 let G;
@@ -534,30 +537,55 @@ function playLayup(area,done){
 }
 
 function playPress(area,done){
-  const wet=G.moisture!=null&&G.moisture>12;
-  area.innerHTML=`<div class="press"><div class="plate top"></div><div class="pboard"></div><div class="plate bot"></div><div class="steam">💨 ジュワ〜 💨</div></div>
-  <div class="gauge"><div class="zone" style="left:45%;width:${wet?14:20}%"></div><div class="needle"></div><span class="gl">0</span><span class="gm">適正圧力（約1MPa前後）</span><span class="gr">MAX</span></div>
-  <div class="hud"><span class="tm"></span><span>🌡 熱盤 約120℃</span><span class="pg"></span></div>
-  <div class="progress"><div></div></div>
-  <div class="msg">${wet?`⚠ 単板の含水率が ${G.moisture.toFixed(1)}% と高め！ 水分が蒸気になって「パンク」が起きやすく、適正ゾーンもせまくなっています。<br>`:''}連打で圧力を上げ、緑のゾーンをキープ！ゾーン内の間だけ接着剤が固まります（この板はゾーン内で約${V().pressNeed}秒）。</div>
-  <button class="big act">💪 加圧！（連打／スペース連打）</button>`;
-  const g=s=>area.querySelector(s),top=g('.plate.top'),nd=g('.needle'),tm=g('.tm'),pg=g('.pg'),pf=g('.progress div'),st=g('.steam'),msg=g('.msg');
-  // 板が厚いほど、ゾーン内に保つ必要がある時間（need）が長い
-  const cf=V(),need=cf.pressNeed,lo=45,hi=wet?59:65;let p=0,t=0,prog=0,pank=0,flash=0;const T=need+8;
-  const pump=()=>{p=Math.min(100,p+8);beep(250+p*5,.04,'square',.02)};
-  g('.act').addEventListener('pointerdown',e=>{e.preventDefault();pump()});onKey(pump);
-  loop(dt=>{t+=dt;p=Math.max(0,p-(5+p*.12)*cf.leak*dt);const z=p>=lo&&p<=hi;
-    if(z)prog+=100/need*dt;
-    if(wet&&z&&Math.random()<dt*.35){prog=Math.max(0,prog-25);pank++;flash=1.2;beep(120,.3,'sawtooth',.05)}
-    flash-=dt;
-    if(flash>0)msg.textContent='💥 パンク！ 単板の水分が蒸気になって膨れ、接着がはがれた…';
-    else if(p>85){prog=Math.max(0,prog-15*dt);msg.textContent='⚠ 圧力オーバー！板がつぶれて薄くなっちゃう！'}
-    else if(z)msg.textContent='いい感じ！熱で接着剤が固まっていく…キープ！';else msg.textContent=p<lo?'圧力が足りない！連打！':'少し強いかも…';
-    top.style.transform=`translateY(${p*.36}px)`;st.style.opacity=z?1:0;nd.style.left=p+'%';
-    pf.style.width=Math.min(100,prog)+'%';pg.textContent=`接着 ${Math.min(100,Math.round(prog))}%`;tm.textContent=`残り ${Math.max(0,T-t).toFixed(1)}秒`;
-    const extra=pank?`・パンク ${pank}回`:'';
-    if(prog>=100){done(clamp(100-Math.max(0,t-need-.5)*6,40,100)-pank*8,`接着完了まで ${t.toFixed(1)}秒${extra}`);return false}
-    if(t>=T){done(prog*.6-pank*8,`時間切れ…接着 ${Math.round(prog)}%${extra}`);return false}});
+  // 圧力カーブをなぞる：加圧 → 保圧 → 減圧①② の目標カーブに、油圧レバーで圧力を合わせ続ける。
+  // 減圧が速すぎると板の中の水蒸気が一気に噴き出してパンクする
+  const cf=V(),wet=G.moisture!=null&&G.moisture>12,PM=1.5,BAND=.08;
+  const segs=[];let t0=0;const add=(d,p0,p1,name)=>{segs.push({t0,t1:t0+d,p0,p1,name});t0+=d};
+  add(1.2,0,0,'準備');add(2,0,1,'加圧');add(cf.pressNeed,1,1,'保圧');add(1.2,1,.45,'減圧①');add(wet?5:3,.45,0,'減圧②（ガス抜き）');
+  const TT=t0,seg=t=>segs.find(s=>t<s.t1)||segs[segs.length-1],target=t=>{const s=seg(t);return s.p0+(s.p1-s.p0)*clamp((t-s.t0)/(s.t1-s.t0),0,1)};
+  area.innerHTML=`<div class="hud"><span class="ph"></span><span class="pv"></span><span class="cp"></span></div>
+  <canvas class="cv pcv" width="640" height="280"></canvas>
+  <div class="pbtns"><button class="dn">▼ 下げる</button><button class="up">▲ 上げる</button></div>
+  <div class="msg">${wet?`⚠ 単板の含水率が ${G.moisture.toFixed(1)}% と高め！ 板の中の水蒸気が多いので、最後のガス抜きを長く・ゆっくりにする必要があります。<br>`:''}画面を上下になぞる（または▲▼ボタン・↑↓キー）と油圧レバーが動きます。オレンジの線を緑の帯に合わせ続けよう！</div>`;
+  const cv=area.querySelector('canvas'),ctx=cv.getContext('2d'),W=640,H=280,g=s=>area.querySelector(s),ph=g('.ph'),pv=g('.pv'),cp=g('.cp'),msg=g('.msg');
+  const X=t=>40+t/TT*(W-60),Y=p=>H-24-p/PM*(H-54);
+  let lever=0,p=0,t=0,inB=0,pank=0,crush=0,cool=0,flash=0,flashTxt='',nextDip=4+Math.random()*2,up=false,down=false,drag=false;const trace=[];
+  const fromY=e=>{const r=cv.getBoundingClientRect();lever=clamp((H-24-(e.clientY-r.top)*H/r.height)/(H-54)*PM,0,PM)};
+  cv.addEventListener('pointerdown',e=>{e.preventDefault();drag=true;try{cv.setPointerCapture(e.pointerId)}catch(_){}fromY(e)});
+  cv.addEventListener('pointermove',e=>{if(drag)fromY(e)});['pointerup','pointercancel'].forEach(ev=>cv.addEventListener(ev,()=>drag=false));
+  const hold=(sel,set)=>{const b=g(sel);b.addEventListener('pointerdown',e=>{e.preventDefault();set(true)});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>set(false)));b.addEventListener('contextmenu',e=>e.preventDefault())};
+  hold('.up',v=>up=v);hold('.dn',v=>down=v);
+  const kd=e=>{if(e.code==='ArrowUp'){e.preventDefault();up=true}if(e.code==='ArrowDown'){e.preventDefault();down=true}},
+        ku=e=>{if(e.code==='ArrowUp')up=false;if(e.code==='ArrowDown')down=false};
+  addEventListener('keydown',kd);addEventListener('keyup',ku);addCleanup(()=>{removeEventListener('keydown',kd);removeEventListener('keyup',ku)});
+  loop(dt=>{t+=dt;const s=seg(t),tg=target(t);
+    if(up)lever=Math.min(PM,lever+.7*dt);if(down)lever=Math.max(0,lever-.7*dt);
+    // 油圧はレバーに少し遅れて追いつく。保圧中はときどき油圧が下がる
+    p+=(lever-p)*Math.min(1,dt*3.2);
+    if(s.name==='保圧'){p-=.02*cf.leak*dt;if(t>nextDip){p=Math.max(0,p-.18*cf.leak);nextDip=t+1.4+Math.random()*1.6;flash=.8;flashTxt='⚠ 油圧が下がった！';beep(160,.1,'square',.03)}}
+    const ok=Math.abs(p-tg)<=BAND;if(ok)inB+=dt;
+    cool-=dt;flash-=dt;
+    if(s.name.startsWith('減圧')&&p<tg-.14&&cool<=0){pank++;cool=1;flash=1;flashTxt='💥 パンク！ 圧力を抜くのが速すぎて、水蒸気が噴き出した';beep(110,.35,'sawtooth',.06)}
+    if(p>1.25){crush+=dt;if(flash<=0){flash=.3;flashTxt='⚠ 圧力が強すぎ！板がつぶれて薄くなる'}}
+    trace.push([t,p]);
+    // 描画
+    ctx.fillStyle='#2b2420';ctx.fillRect(0,0,W,H);ctx.font='12px sans-serif';
+    ctx.strokeStyle='rgba(255,255,255,.08)';ctx.fillStyle='rgba(255,255,255,.45)';
+    for(let q=0;q<=PM+.01;q+=.5){ctx.beginPath();ctx.moveTo(40,Y(q));ctx.lineTo(W-20,Y(q));ctx.stroke();ctx.fillText(q.toFixed(1),8,Y(q)+4)}
+    ctx.fillText('MPa',8,14);
+    for(const sg of segs){ctx.strokeStyle='rgba(255,255,255,.12)';ctx.beginPath();ctx.moveTo(X(sg.t1),20);ctx.lineTo(X(sg.t1),H-24);ctx.stroke();
+      if(sg.name!=='準備'){ctx.fillStyle=sg===s?'#ffd34d':'rgba(255,255,255,.5)';ctx.fillText(sg.name,X(sg.t0)+3,H-8)}}
+    ctx.fillStyle='rgba(90,190,100,.28)';ctx.beginPath();
+    for(let x=0;x<=TT;x+=.05)ctx.lineTo(X(x),Y(target(x)+BAND));for(let x=TT;x>=0;x-=.05)ctx.lineTo(X(x),Y(Math.max(0,target(x)-BAND)));ctx.fill();
+    ctx.setLineDash([5,4]);ctx.strokeStyle='#7fd18b';ctx.lineWidth=1.5;ctx.beginPath();for(let x=0;x<=TT;x+=.05)ctx.lineTo(X(x),Y(target(x)));ctx.stroke();ctx.setLineDash([]);
+    ctx.strokeStyle='#ff9a3c';ctx.lineWidth=3;ctx.beginPath();trace.forEach(([a,b],k)=>k?ctx.lineTo(X(a),Y(b)):ctx.moveTo(X(a),Y(b)));ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(X(t),20);ctx.lineTo(X(t),H-24);ctx.stroke();
+    ctx.fillStyle=ok?'#7fd18b':'#ff6b5a';ctx.beginPath();ctx.arc(X(t),Y(p),6,0,7);ctx.fill();
+    ctx.fillStyle='#ccc';ctx.fillRect(W-14,Y(lever)-3,10,6);ctx.fillText('レバー',W-56,Y(lever)+4);
+    if(flash>0){ctx.fillStyle='#ffcf5a';ctx.font='bold 17px sans-serif';ctx.fillText(flashTxt,50,40)}
+    ph.textContent=`工程：${s.name}`;pv.textContent=`圧力 ${p.toFixed(2)} MPa`;cp.textContent=`板の中心 ${Math.round(Math.min(110,20+Math.max(0,t-1.2)*14))}℃`;
+    if(t>=TT){const sc=inB/TT*100-pank*20-Math.min(20,crush*8);
+      done(sc,`目標どおりの圧力：${Math.round(inB/TT*100)}%${pank?`・パンク ${pank}回`:''}${crush>.2?'・圧力オーバーあり':''}`);return false}});
 }
 
 // 仕上げ・検査：パネルの中から不良を見つけてタップする
@@ -674,9 +702,9 @@ const STAGES=[
   points:['合板は「3枚以上の単板を、繊維方向がほぼ直角に交わるように接着したもの」','直交させると方向による強さの差や伸び縮みがおさえられ、反り・割れにくくなる','表と裏を対称にするため、基本は奇数枚（3・5・7プライ…）','接着の性能：特類＝屋外・常に湿潤／1類＝ときどき湿潤／2類＝主に室内'],
  },
  {icon:'🔥',name:'熱圧',yomi:'ねつあつ',play:playPress,
-  fact:'重ねた単板をまず冷たいプレス（コールドプレス）で仮接着し、形を落ち着かせます。そのあとホットプレスで熱（おおむね110〜140℃）と圧力（約1MPa前後）をかけ、接着剤を固めます。',
-  how:'ボタン連打で圧力アップ！緑のゾーンにいる間だけ接着が進みます。上げすぎると逆効果。単板の含水率が高いとパンクが起きます。',
-  points:['コールドプレス（冷圧）で仮接着 → ホットプレス（熱圧）で本接着','熱盤の温度はおおむね110〜140℃、温度・圧力・時間の3つが接着の決め手','圧力が強すぎると板がつぶれて薄くなり、弱すぎると接着不良になる','単板の水分が多いと、蒸気で「パンク」が起きる'],
+  fact:'重ねた単板をまず冷たいプレス（コールドプレス）で仮接着し、形を落ち着かせます。そのあとホットプレスで熱（おおむね110〜140℃）と圧力（約1MPa前後）をかけ、接着剤を固めます。最後は圧力を一気に抜かず、段階的に下げて（減圧・ガス抜き）、板の中にたまった水蒸気をゆっくり逃がします。',
+  how:'画面に、加圧 → 保圧 → 減圧①② の目標の圧力カーブが出ます。画面を上下になぞるか▲▼ボタンで油圧レバーを動かし、オレンジの線（いまの圧力）を緑の帯に合わせ続けよう。減圧で圧力を急に抜くとパンク、強すぎると板がつぶれます。',
+  points:['コールドプレス（冷圧）で仮接着 → ホットプレス（熱圧）で本接着','熱盤の温度はおおむね110〜140℃、温度・圧力・時間の3つが接着の決め手','圧力が強すぎると板がつぶれて薄くなり、弱すぎると接着不良になる','最後は段階的に減圧して水蒸気を逃がす。急に圧力を抜くとパンクする','単板の水分が多いと、蒸気で「パンク」が起きる'],
  },
  {icon:'✨',name:'仕上げ・検査',yomi:'しあげ・けんさ',play:playInspect,
   fact:'固まった合板の四辺を切りそろえ（トリミング）、用途に応じて表面をサンダーで研磨します。最後に検査を行い、膨れ・はく離・割れなどの不良がないかを確かめます。JAS（日本農林規格）の格付けを受けた製品にはJASマークが表示されて出荷されます。',
@@ -792,6 +820,7 @@ const GLOSSARY=[
  ['心板・添心板','しんいた・そえしんいた','合板の内側の単板。5プライでは表板・添心板・心板・添心板・裏板の構成になる。'],
  ['コールドプレス（冷圧）','れいあつ','熱をかけずに圧力をかけ、単板を仮接着する工程。'],
  ['ホットプレス（熱圧）','ねつあつ','熱した盤で熱と圧力をかけ、接着剤を固める工程。'],
+ ['保圧・減圧','ほあつ・げんあつ','熱圧で、決めた圧力を一定時間保つことを保圧、最後に圧力を段階的に下げて水蒸気を逃がすことを減圧（ガス抜き）という。'],
  ['パンク','','熱圧時に単板の水分が蒸気になり、膨れたり接着がはがれたりする不良。'],
  ['はく離','はくり','接着剤の塗りむらや圧力不足などで、合板の層どうしがはがれる不良。'],
  ['節抜け','ふしぬけ','単板の節が抜け落ちてできた穴。補修（パッチ）して使う。'],
