@@ -84,6 +84,15 @@ button{font:inherit;cursor:pointer;border:none;border-radius:12px;color:var(--in
 .bar .tz{position:absolute;top:0;bottom:0;left:11.43%;width:5.71%;background:var(--zone);border:1px solid var(--ok)}
 .sub{font-size:.8rem;color:var(--muted)}
 input[type=range]{width:100%;accent-color:var(--accent)}
+.tctl{background:#f3e6d0;border-radius:12px;padding:10px;margin-top:10px}
+.drows{display:grid;gap:8px;margin-top:10px}
+.drow{display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;background:#f3e6d0;border-radius:12px;padding:8px 10px}
+.drow .dn{font-weight:800;font-size:.85rem}
+.drow .num{font-size:1.4rem;line-height:1.1}
+.drow .num.over{color:var(--ng)}
+.drow .bar.rk{height:5px;margin-top:2px}
+.drow .out{padding:10px 12px;font-weight:700;background:var(--wood-l);box-shadow:0 3px 0 #c9a066}
+.drow.done{opacity:.55}
 /* 選別 */
 .vstage{position:relative;padding:10px 0}
 .veneer{position:relative;height:190px;border-radius:6px;background:repeating-linear-gradient(0deg,#efcf96 0 7px,#e6c083 7px 9px,#f2d6a2 9px 16px,#e3bb7c 16px 17px);box-shadow:0 3px 8px rgba(0,0,0,.2)}
@@ -261,18 +270,18 @@ const VARIANT={
  kozo:{log:8,cuts:[2,4,6],saw:30,sawUp:14,bark:'stripe',barkHp:1,barkTime:10,peelZone:14,drift:1,knotHits:false,
   dryStart:70,dryRate:1,crackT:165,sortMix:'AAABBBHHRR',belt:14,gap:2.4,smallKnot:false,layTime:40,pressNeed:7,leak:1,inspN:5,inspPanels:3,inspTime:9,
   notes:['長さ8mの原木を、約2mずつ切る回数は原木の長さで変わります。','樹皮が細長くはがれるタイプの原木です（10秒）。','単板の厚さの目安は約2.4mm。基本の剥き方をマスターしよう。',
-   '厚めの単板（約2.4mm）なので、乾くまでに少し時間がかかります。','単板10枚が流れてきます。穴あき・燃料行きの単板もまんべんなく混ざっています。','5プライの構成です（40秒）。',
+   '厚めの単板（約2.4mm）3枚を同時に乾かします。乾くまでに少し時間がかかります。','単板10枚が流れてきます。穴あき・燃料行きの単板もまんべんなく混ざっています。','5プライの構成です（40秒）。',
    '厚さ12mmの板は、接着剤が中まで固まるのに時間がかかります（ゾーン内で約7秒）。','合板3枚を検査。不良は全部で5か所、1枚9秒で判定します。']},
  kata:{log:6,cuts:[2,4],saw:38,sawUp:16,bark:'thick',barkHp:2,barkTime:12,peelZone:17,drift:1.15,knotHits:true,
   dryStart:80,dryRate:1,crackT:165,sortMix:'AAABBBBBHHHR',belt:15,gap:2.3,smallKnot:false,layTime:40,pressNeed:7,leak:1.3,inspN:5,inspPanels:3,inspTime:8,
   notes:['長さ6mの原木を2回切ります。ノコの動きが速めなので注意！','樹皮が厚い原木です。同じ場所を2回こすらないとはがれません（12秒）。',
-   '節の多い原木です。ときどき刃が節に当たって、厚さが急に乱れます。','水分の多い単板（含水率80%から）です。乾くまでに時間がかかります。',
+   '節の多い原木です。ときどき刃が節に当たって、厚さが急に乱れます。','水分の多い単板（含水率80%前後から）3枚です。乾くまでに時間がかかります。',
    '型枠用は、内側に使える節あり・穴あきの単板が多め。12枚が少し速めに流れてきます。','5プライの構成です（40秒）。',
    '厚さ12mm（ゾーン内で約7秒）。今回のプレス機は圧力が抜けやすいので、連打のペースを上げよう。','合板3枚を検査。不良は全部で5か所、1枚8秒と少し短めです。']},
  futsu:{log:10,cuts:[2,4,6,8],saw:26,sawUp:8,bark:'thin',barkHp:1,barkTime:8,peelZone:13,drift:.85,knotHits:false,
-  dryStart:60,dryRate:1.4,crackT:155,sortMix:'AAAABBBHHR',belt:12,gap:2.6,smallKnot:true,layTime:30,pressNeed:5,leak:1,inspN:6,inspPanels:4,inspTime:8,
+  dryStart:60,dryRate:1.25,crackT:155,sortMix:'AAAABBBHHR',belt:12,gap:2.6,smallKnot:true,layTime:30,pressNeed:5,leak:1,inspN:6,inspPanels:4,inspTime:8,
   notes:['長さ10mの長い原木を、約2mずつ4回切ります。','樹皮が薄い原木です。そのかわり制限時間は8秒！',
-   '薄い単板（約1.8mm）は、厚さの許容範囲がせまくなります。','薄い単板は早く乾きますが、熱に弱く155℃を超えると割れやすくなります。',
+   '薄い単板（約1.8mm）は、厚さの許容範囲がせまくなります。','薄い単板3枚。早く乾くぶん取り出すタイミングがシビアで、熱に弱く155℃を超えると割れやすくなります。',
    '室内用は見た目が大事。小さな節も見逃さないように（10枚・ゆっくりめ）。','3プライの構成です（30秒）。',
    '厚さ5.5mmの薄い板は、短い時間で固まります（ゾーン内で約5秒）。素早く圧力を上げよう。','室内用は見た目が大事。合板4枚・不良は全部で6か所、1枚8秒で判定します。']},
 };
@@ -384,28 +393,48 @@ function playPeel(area,done){
 }
 
 function playDry(area,done){
-  const cf=V(),M0=cf.dryStart,CT=cf.crackT;
+  // 水分量のちがう単板3枚を、1つの温度設定で同時に乾かし、1枚ずつ取り出す。
+  // 温度はつまみを動かしてもゆっくり追いつき、乾燥の後半は水分が抜けにくくなる
+  const cf=V(),CT=cf.crackT,names=['上段','中段','下段'];
+  const offs=shuffle([-8,0,10]),rates=shuffle([.85,1,1.15]);
+  const S=names.map((n,k)=>({n,m:cf.dryStart+offs[k]+(Math.random()-.5)*4,rate:rates[k],out:false,crack:0}));
+  S.forEach(s=>s.m0=s.m);const M0=Math.max(...S.map(s=>s.m0));
   area.innerHTML=`<div class="dryer"><div class="belt"></div><div class="oven"><span class="heat">♨ ♨ ♨</span><small>ドライヤー（熱風乾燥）</small></div><div class="sheet"></div></div>
-  <div class="meters">
-    <div><div class="lbl">単板の含水率</div><div class="num mo">${M0.toFixed(1)}%</div><div class="bar"><div class="fill mf"></div><div class="tz" style="left:${8/M0*100}%;width:${4/M0*100}%"></div></div><div class="sub">目標 8〜12%（10%前後がベスト）</div></div>
-    <div><div class="lbl">乾燥温度 <b class="tv">140</b>℃</div><input type="range" class="temp" min="100" max="180" value="140">
-      <div class="lbl">割れリスク（${CT}℃超で上昇）</div><div class="bar"><div class="fill risk" style="width:0"></div></div></div>
-  </div>
-  <div class="msg">温度を上げると早く乾くけど、上げすぎると割れが出ます。乾きすぎも、乾き不足もNG。ここでの含水率は熱圧の工程にも影響します！</div>
-  <button class="big act">📤 取り出す！（スペースでもOK）</button>`;
-  const g=s=>area.querySelector(s),temp=g('.temp'),tv=g('.tv'),mo=g('.mo'),mf=g('.mf'),risk=g('.risk'),sheet=g('.sheet');
-  let m=M0,t=0,crack=0,fin=false;
-  // 160℃で乾かしたときの目安時間をもとに、早さボーナスの基準を決める
-  const ref=(M0-10)/((160-90)*.06*cf.dryRate);
-  loop(dt=>{t+=dt;const T=+temp.value;tv.textContent=T;m=Math.max(0,m-(T-90)*.06*cf.dryRate*dt);
-    if(T>CT)crack=Math.min(1,crack+(T-CT)/15*.18*dt);
-    mo.textContent=m.toFixed(1)+'%';mo.className='num mo'+(m>=8&&m<=12?' good':'');mf.style.width=(m/M0*100)+'%';risk.style.width=crack*100+'%';
-    sheet.style.background=`hsl(34,50%,${32+(M0-m)/M0*42}%)`;
-    if(m<=0){finish();return false}});
-  function finish(){if(fin)return;fin=true;G.moisture=m;const acc=Math.max(0,75-Math.abs(m-10)*12),sp=clamp((ref*2.4-t)/(ref*1.4),0,1)*25,pen=crack*45;
-    const why=m>12?'（乾き不足：熱圧でパンクしやすくなります）':m<8?'（乾きすぎ：割れや接着不良の原因に）':'';
-    done(acc+sp-pen,`含水率 ${m.toFixed(1)}%${why}・時間 ${t.toFixed(1)}秒${pen>2?`・割れ発生 -${Math.round(pen)}点`:''}`)}
-  g('.act').onclick=finish;onKey(finish);
+  <div class="tctl"><div class="lbl">温度　設定 <b class="tv">140</b>℃ ／ いまの温度 <b class="ta">140</b>℃</div><input type="range" class="temp" min="100" max="180" value="140">
+    <div class="sub">温度はゆっくり追いつきます。含水率30%以下の単板は、${CT}℃を超えると割れやすくなります（湿っているうちは高温でもOK）。</div></div>
+  <div class="drows">${S.map((s,k)=>`<div class="drow" data-k="${k}"><span class="dn">${s.n}</span>
+    <div><div class="num mo">${s.m.toFixed(1)}%</div><div class="bar"><div class="fill mf"></div><div class="tz" style="left:${8/M0*100}%;width:${4/M0*100}%"></div></div><div class="bar rk"><div class="fill risk" style="width:0"></div></div></div>
+    <button class="out">📤 取り出す<kbd>${k+1}</kbd></button></div>`).join('')}</div>
+  <div class="msg">3枚の単板は、それぞれ水分量と乾きやすさがちがいます。含水率8〜12%（10%がベスト）になったものから取り出そう！ 速く仕上げるほどボーナスあり。湿っているうちは高温で、乾いてきたら温度を下げるのがコツ。</div>`;
+  const g=s=>area.querySelector(s),temp=g('.temp'),tv=g('.tv'),ta=g('.ta'),sheet=g('.sheet'),msg=g('.msg'),rows=[...area.querySelectorAll('.drow')];
+  let T=140,t=0,fin=false;
+  // 早さボーナスの基準：湿っているうちは180℃、乾いてきたら割れない温度に下げたときの時間
+  const ref=((M0-30)/(90*.06)+20/((CT-90)*.06*.85))/(cf.dryRate*.85);
+  const take=k=>{const s=S[k];if(s.out||fin)return;s.out=true;s.t=t;const r=rows[k];r.classList.add('done');r.querySelector('.out').disabled=true;
+    const d=Math.abs(s.m-10),txt=s.m>12?'乾き不足：熱圧でパンクしやすい':s.m<8?'乾きすぎ：割れや接着不良の原因に':'ちょうどいい！';
+    msg.textContent=`${s.n}を取り出し：含水率 ${s.m.toFixed(1)}%（${txt}）`;beep(d<=2?880:400,.12,'triangle');
+    if(S.every(x=>x.out))finish()};
+  rows.forEach((r,k)=>r.querySelector('.out').onclick=()=>take(k));
+  const key=e=>{const k={Digit1:0,Digit2:1,Digit3:2,Numpad1:0,Numpad2:1,Numpad3:2}[e.code];if(k!=null&&!e.repeat){e.preventDefault();take(k)}};
+  addEventListener('keydown',key);addCleanup(()=>removeEventListener('keydown',key));
+  loop(dt=>{if(fin)return false;t+=dt;const set=+temp.value;tv.textContent=set;T+=(set-T)*Math.min(1,dt*.6);ta.textContent=Math.round(T);
+    S.forEach((s,k)=>{if(s.out)return;
+      // 後半（含水率25%以下）は水分が抜けにくくなる
+      const slow=s.m>25?1:.7+.3*s.m/25;
+      s.m=Math.max(0,s.m-(T-90)*.06*cf.dryRate*s.rate*slow*dt);
+      // 乾いてきた（含水率30%以下）単板を高温にさらすと割れやすい
+      if(T>CT&&s.m<30)s.crack=Math.min(1,s.crack+(T-CT)/15*.18*dt);
+      const r=rows[k];r.querySelector('.mo').textContent=s.m.toFixed(1)+'%';r.querySelector('.mo').className='num mo'+(s.m>=8&&s.m<=12?' good':s.m<8?' over':'');
+      r.querySelector('.mf').style.width=(s.m/M0*100)+'%';r.querySelector('.risk').style.width=s.crack*100+'%';
+      if(s.m<=0)take(k)});
+    const live=S.filter(s=>!s.out),avg=live.length?live.reduce((a,s)=>a+s.m,0)/live.length:10;
+    sheet.style.background=`hsl(34,50%,${32+(M0-avg)/M0*42}%)`});
+  function finish(){if(fin)return;fin=true;
+    const acc=S.reduce((a,s)=>a+Math.max(0,100-Math.abs(s.m-10)*20),0)/S.length;
+    const tEnd=Math.max(...S.map(s=>s.t)),sp=clamp((ref*1.25-tEnd)/(ref*.25),0,1)*25,pen=S.reduce((a,s)=>a+s.crack,0)/S.length*45;
+    // 熱圧の工程には、いちばん問題のある単板の含水率を引き継ぐ
+    const worst=S.reduce((a,s)=>Math.abs(s.m-10)>Math.abs(a.m-10)?s:a);G.moisture=worst.m>12||worst.m<8?worst.m:S.reduce((a,s)=>a+s.m,0)/S.length;
+    done(acc*.75+sp-pen,`含水率 ${S.map(s=>`${s.n} ${s.m.toFixed(1)}%`).join('・')}・時間 ${tEnd.toFixed(1)}秒${pen>2?`・割れ発生 -${Math.round(pen)}点`:''}`)}
 }
 
 function playSort(area,done){
@@ -631,8 +660,8 @@ const STAGES=[
  },
  {icon:'♨️',name:'乾燥',yomi:'かんそう',play:playDry,
   fact:'剥いたばかりの単板は水分たっぷり。熱風のドライヤー（120〜160℃くらい）で、含水率をおよそ10%前後まで乾かします。乾き不足は熱圧での「パンク」の原因に、乾かしすぎや急な高温は割れの原因になります。',
-  how:'温度スライダーで乾くスピードを調整し、含水率が8〜12%のときに「取り出す！」。ここでの結果は熱圧の工程に影響します。',
-  points:['含水率＝木に含まれる水分の重さ÷乾いた木の重さ','単板はおよそ10%前後まで乾かしてから接着する','乾き不足 → 熱圧で水分が蒸気になり「パンク（膨れ・はく離）」が起こりやすい','乾かしすぎ・高温すぎ → 割れや反り、接着不良の原因'],
+  how:'水分量と乾きやすさがちがう単板3枚（上段・中段・下段）を、1つの温度設定で同時に乾かします。含水率が8〜12%になったものから1枚ずつ「取り出す！」。温度はつまみを動かしてもゆっくり追いつくので、先を読んで調整しよう。ここでの結果は熱圧の工程に影響します。',
+  points:['含水率＝木に含まれる水分の重さ÷乾いた木の重さ','単板は1枚ごとに水分量がちがう。乾燥の後半は水分が抜けにくくなり、乾くスピードが落ちる','単板はおよそ10%前後まで乾かしてから接着する','乾き不足 → 熱圧で水分が蒸気になり「パンク（膨れ・はく離）」が起こりやすい','乾かしすぎ・高温すぎ → 割れや反り、接着不良の原因'],
  },
  {icon:'🔍',name:'選別',yomi:'せんべつ・ほしゅう',play:playSort,
   fact:'乾いた単板の節・割れ・穴をチェックして仕分けます。きれいな単板は表板・裏板に、小さな節がある単板は内側の心板に。穴は補修（パッチ）して使い、大きな割れや腐れがあって合板に使えない単板は、チップやボイラーの燃料として活用します。幅の狭い単板はつなぎ合わせて（剥ぎ合わせ）1枚の大きさにします。',
