@@ -144,10 +144,15 @@ kbd{display:inline-block;margin-left:4px;padding:0 5px;border:1px solid #b9935a;
 .ipanel.in{animation:pop .35s}
 .d-pank{width:30px;height:23px;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,#f8e4bd 25%,#ecca93 60%,transparent 74%);box-shadow:1px 2px 3px rgba(90,55,20,.22)}
 .d-peel{width:40px;height:8px;background:linear-gradient(#f3d9a8 45%,#7a5530 45%,#7a5530 62%,#d4a76a 62%);transform:rotate(-2deg);border-radius:2px;opacity:.85}
-.d-crack{width:40px;height:2px;background:#6b4423;border-radius:2px;transform:rotate(4deg)}
+.d-crack,.d-chip{display:block;line-height:0}
 .d-hole{width:11px;height:9px;border-radius:50%;background:radial-gradient(#3b2414 50%,#7a5530 70%,transparent 76%)}
-.d-chip{width:22px;height:22px;background:var(--card);clip-path:polygon(0 0,100% 0,0 100%)}
-.spot.corner{margin:0;align-items:flex-start;justify-content:flex-start;border-radius:0 0 50% 0}
+.spot.corner{margin:0;border-radius:0;width:44px;height:44px}
+.c-tl{left:0;top:0;align-items:flex-start;justify-content:flex-start}
+.c-tr{right:0;top:0;align-items:flex-start;justify-content:flex-end}
+.c-bl{left:0;bottom:0;align-items:flex-end;justify-content:flex-start}
+.c-br{right:0;bottom:0;align-items:flex-end;justify-content:flex-end}
+.c-tr svg{transform:scaleX(-1)}.c-bl svg{transform:scaleY(-1)}.c-br svg{transform:scale(-1,-1)}
+.c-bl .tag,.c-br .tag{top:auto;bottom:100%}.c-tr .tag,.c-br .tag{right:0}
 .d-rough{width:44px;height:30px;border-radius:40%;opacity:.5;background:radial-gradient(#a08a6e 1px,transparent 1.5px) 0 0/5px 5px,radial-gradient(#8e7658 1px,transparent 1.5px) 2px 3px/6px 6px}
 .decoy{position:absolute;transform:translate(-50%,-50%)}
 .dk-tone{width:90px;height:34px;border-radius:50%;background:radial-gradient(ellipse,rgba(170,110,50,.22),transparent 70%)}
@@ -530,6 +535,25 @@ const DEFECTS={
   chip:{name:'角欠け',why:'トリミングや運搬のときに角が欠けたものです。'},
   rough:{name:'研磨むら',why:'サンダーが当たらず、表面がざらついたまま残っています。'},
 };
+// 割れ：木目に沿って走るギザギザの割れ目（中央が太く端が細い、小さな枝分かれつき）
+function crackSVG(){const W=64,H=20,n=16,pts=[];let y=10;
+  for(let k=0;k<=n;k++){y=clamp(y+(Math.random()-.5)*2.4,5,15);pts.push([2+k*(W-4)/n,y])}
+  const w=k=>1.6*Math.sin(Math.PI*k/n)+.12;
+  const top=pts.map((p,k)=>`${p[0].toFixed(1)},${(p[1]-w(k)).toFixed(1)}`),bot=pts.map((p,k)=>`${p[0].toFixed(1)},${(p[1]+w(k)).toFixed(1)}`).reverse();
+  const b=pts[4+(Math.random()*8|0)],s=Math.random()<.5?-1:1;
+  return`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><polyline points="${pts.map(p=>`${p[0].toFixed(1)},${(p[1]+1.6).toFixed(1)}`).join(' ')}" fill="none" stroke="rgba(255,244,220,.7)" stroke-width=".9"/>
+    <polygon points="${top.join(' ')} ${bot.join(' ')}" fill="#2a170a"/><path d="M${b[0].toFixed(1)} ${b[1].toFixed(1)} q3 ${s*1.5} ${5+Math.random()*3} ${s*(3+Math.random()*2)}" stroke="#3b2210" stroke-width=".7" fill="none" stroke-linecap="round"/></svg>`}
+// 角欠け：角が不規則に割れ、下の層（木目が直交した単板）とささくれた断面が見える
+let chipId=0;
+function chipSVG(){const S=36,id='cg'+(++chipId),a=26+Math.random()*6,b=22+Math.random()*7;
+  const edge=(sa,sb,j)=>{const p=[],bul=.15+Math.random()*.25;for(let k=0;k<=8;k++){const t=k/8,bx=Math.sin(t*Math.PI)*bul*sa,by=Math.sin(t*Math.PI)*bul*sb;
+      p.push([sa*(1-t)+bx+(k%8?(Math.random()-.5)*j:0),sb*t+by+(k%8?(Math.random()-.5)*j:0)])}p[0][1]=0;p[8][0]=0;return p};
+  const outer=edge(a,b,4),inner=edge(a*.55,b*.55,3),pts=p=>p.map(q=>`${Math.max(0,q[0]).toFixed(1)},${Math.max(0,q[1]).toFixed(1)}`).join(' ');
+  const ticks=outer.slice(1,8).map(q=>`M${q[0].toFixed(1)} ${q[1].toFixed(1)} l${(1+Math.random()*2).toFixed(1)} ${(1+Math.random()*2).toFixed(1)}`).join(' ');
+  return`<svg width="${S}" height="${S}" viewBox="0 0 ${S} ${S}"><defs><pattern id="${id}" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="3" height="3" fill="#d3a062"/><rect width="1" height="3" fill="#b07a3e"/></pattern></defs>
+    <polygon points="0,0 ${pts(outer)}" fill="url(#${id})"/><polyline points="${pts(outer)}" fill="none" stroke="#7a4f24" stroke-width="1.1" stroke-linejoin="round"/>
+    <path d="${ticks}" stroke="#8a5a2b" stroke-width=".7" stroke-linecap="round"/><polyline points="${outer.map(q=>`${(q[0]+1.2).toFixed(1)},${(q[1]+1.2).toFixed(1)}`).join(' ')}" fill="none" stroke="rgba(255,244,220,.6)" stroke-width=".7"/>
+    <polygon points="0,0 ${pts(inner)}" style="fill:var(--card)"/><polyline points="${pts(inner)}" fill="none" stroke="#5e3b1a" stroke-width=".9"/></svg>`}
 function playInspect(area,done){
   // 出荷前検査：合板が1枚ずつ流れてくる。不良をタップで指摘してから「合格／不合格」を判定する
   const cf=V(),P=cf.inspPanels,D=cf.inspN,PT=cf.inspTime;
@@ -552,9 +576,9 @@ function playInspect(area,done){
   const upd=()=>{fd.textContent=`指摘 ${found}か所・ミス ${missP}`};
   function show(){pi++;if(pi>=P){finish();return}
     const ds=panels[pi],spots=[];found=0;missP=0;t=PT;
-    const place=k=>{if(k==='chip')return[0,0];
+    const place=k=>{if(k==='chip'){const c=pick(['tl','tr','bl','br']);spots.corner=c;return[c[1]==='l'?0:100,c[0]==='t'?0:100]}
       for(let n=0;n<60;n++){const p=[8+R(0,84),14+R(0,72)];if(spots.every(s=>Math.hypot((s[0]-p[0])*2.4,s[1]-p[1])>24))return p}return[50,50]};
-    const html=ds.map((k,n)=>{const p=place(k);spots.push(p);return`<div class="spot${k==='chip'?' corner':''}" data-n="${n}" style="left:${p[0]}%;top:${p[1]}%"><i class="d-${k}"></i></div>`}).join('');
+    const html=ds.map((k,n)=>{const p=place(k);spots.push(p);return k==='chip'?`<div class="spot corner c-${spots.corner}" data-n="${n}"><i class="d-chip">${chipSVG()}</i></div>`:`<div class="spot" data-n="${n}" style="left:${p[0]}%;top:${p[1]}%"><i class="d-${k}">${k==='crack'?crackSVG():''}</i></div>`}).join('');
     // まぎらわしいけれど不良ではない模様（色むら・濃い木目・明るい斑点）
     const decoys=Array.from({length:3+(Math.random()*2|0)},()=>{const p=place('x');spots.push(p);
       return`<i class="decoy dk-${pick(['tone','streak','spot'])}" style="left:${p[0]}%;top:${p[1]}%"></i>`}).join('');
