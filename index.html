@@ -226,6 +226,27 @@ const GLUES=[
  {cls:'2類',name:'ユリア樹脂系 など',note:'主に室内向け。耐水性は控えめだがコストが低い'},
 ];
 const GRANK={'特類':3,'1類':2,'2類':1};
+// 注文ごとのミニゲームの違い（notes は各工程の説明画面に表示）
+const VARIANT={
+ kozo:{log:8,cuts:[2,4,6],saw:30,sawUp:14,bark:'stripe',barkHp:1,barkTime:10,peelZone:20,drift:1,knotHits:false,
+  dryStart:70,dryRate:1,crackT:165,sortMix:'AAABBBXX',sortTime:20,smallKnot:false,layTime:40,pressNeed:7,leak:1,inspN:4,inspTime:15,
+  notes:['長さ8mの原木を、約2mずつ切る回数は原木の長さで変わります。','樹皮が細長くはがれるタイプの原木です（10秒）。','単板の厚さの目安は約2.4mm。基本の剥き方をマスターしよう。',
+   '厚めの単板（約2.4mm）なので、乾くまでに少し時間がかかります。','単板8枚を20秒で仕分けます。','5プライの構成です（40秒）。',
+   '厚さ12mmの板は、接着剤が中まで固まるのに時間がかかります（ゾーン内で約7秒）。','不良は4か所（15秒）。']},
+ kata:{log:6,cuts:[2,4],saw:38,sawUp:16,bark:'thick',barkHp:2,barkTime:12,peelZone:20,drift:1.15,knotHits:true,
+  dryStart:80,dryRate:1,crackT:165,sortMix:'AAABBBBBXX',sortTime:24,smallKnot:false,layTime:40,pressNeed:7,leak:1.3,inspN:4,inspTime:15,
+  notes:['長さ6mの原木を2回切ります。ノコの動きが速めなので注意！','樹皮が厚い原木です。同じ場所を2回こすらないとはがれません（12秒）。',
+   '節の多い原木です。ときどき刃が節に当たって、厚さが急に乱れます。','水分の多い単板（含水率80%から）です。乾くまでに時間がかかります。',
+   '型枠用は、内側に使える節のある単板が多め。10枚を24秒で仕分けます。','5プライの構成です（40秒）。',
+   '厚さ12mm（ゾーン内で約7秒）。今回のプレス機は圧力が抜けやすいので、連打のペースを上げよう。','不良は4か所（15秒）。']},
+ futsu:{log:10,cuts:[2,4,6,8],saw:26,sawUp:8,bark:'thin',barkHp:1,barkTime:8,peelZone:15,drift:.85,knotHits:false,
+  dryStart:60,dryRate:1.4,crackT:155,sortMix:'AAABBBXX',sortTime:20,smallKnot:true,layTime:30,pressNeed:5,leak:1,inspN:5,inspTime:18,
+  notes:['長さ10mの長い原木を、約2mずつ4回切ります。','樹皮が薄い原木です。そのかわり制限時間は8秒！',
+   '薄い単板（約1.8mm）は、厚さの許容範囲がせまくなります。','薄い単板は早く乾きますが、熱に弱く155℃を超えると割れやすくなります。',
+   '室内用は見た目が大事。小さな節も見逃さないように（8枚・20秒）。','3プライの構成です（30秒）。',
+   '厚さ5.5mmの薄い板は、短い時間で固まります（ゾーン内で約5秒）。素早く圧力を上げよう。','室内用は見た目が大事。不良は5か所（18秒）。']},
+};
+const V=()=>VARIANT[G.order.id];
 let G;
 const newGame=order=>({order,scores:[],quiz:[],moisture:null,glue:null,dirsOK:null,glueOK:null});
 
@@ -235,9 +256,12 @@ function scratch(area,o,done){
   area.innerHTML=`<div class="hud"><span class="tm"></span><span class="pc"></span></div>
   <canvas class="cv scr" width="${W}" height="${H}"></canvas><div class="msg">${o.msg}</div>`;
   const cv=area.querySelector('canvas'),ctx=cv.getContext('2d'),tm=area.querySelector('.tm'),pc=area.querySelector('.pc');
-  const cells=[];for(let j=0;j<rows;j++)for(let i=0;i<cols;i++)cells.push({i,j,on:true,c:o.cell(i,j)});
+  // hp>1 のセルは、間をあけて何回かこすらないと消えない（厚い樹皮）
+  const hp=o.hp||1,cells=[];
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const v=o.cell(i,j);cells.push({i,j,on:true,hp,t:0,c:v.c||v,c2:v.c2||v.c||v})}
   let cleared=0,t=o.time,started=false,down=false,last=null;
-  const rub=(x,y)=>{for(const c of cells)if(c.on){const dx=(c.i+.5)*cw-x,dy=(c.j+.5)*ch-y;if(dx*dx+dy*dy<900){c.on=false;cleared++}}};
+  const rub=(x,y)=>{const now=performance.now();for(const c of cells)if(c.on){const dx=(c.i+.5)*cw-x,dy=(c.j+.5)*ch-y;
+    if(dx*dx+dy*dy<900&&now-c.t>180){c.t=now;if(--c.hp<=0){c.on=false;cleared++}}}};
   const pos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]};
   cv.addEventListener('pointerdown',e=>{e.preventDefault();down=true;started=true;try{cv.setPointerCapture(e.pointerId)}catch(_){}last=pos(e);rub(...last)});
   cv.addEventListener('pointermove',e=>{if(!down)return;const p=pos(e),dx=p[0]-last[0],dy=p[1]-last[1],n=Math.ceil(Math.hypot(dx,dy)/10)||1;
@@ -246,7 +270,7 @@ function scratch(area,o,done){
   loop(dt=>{
     if(started)t-=dt;
     ctx.clearRect(0,0,W,H);ctx.save();rr(ctx,4,4,W-8,H-8,o.radius);ctx.clip();o.bg(ctx,W,H);
-    for(const c of cells)if(c.on){ctx.fillStyle=c.c;ctx.fillRect(c.i*cw,c.j*ch,cw+.6,ch+.6)}ctx.restore();
+    for(const c of cells)if(c.on){ctx.fillStyle=c.hp<hp?c.c2:c.c;ctx.fillRect(c.i*cw,c.j*ch,cw+.6,ch+.6)}ctx.restore();
     const r=cleared/cells.length;
     tm.textContent=started?`残り ${Math.max(0,t).toFixed(1)}秒`:`こすったらスタート（${o.time}秒）`;
     pc.textContent=`${o.label} ${Math.round(r*100)}%`;
@@ -256,45 +280,55 @@ function scratch(area,o,done){
 
 /* ===== 各工程のミニゲーム ===== */
 function playCut(area,done){
-  const T=[25,50,75];
-  area.innerHTML=`<div class="ruler"><span>0m</span><span>2m</span><span>4m</span><span>6m</span><span>8m</span></div>
+  const cf=V(),L=cf.log,T=cf.cuts.map(m=>m/L*100),N=T.length;
+  area.innerHTML=`<div class="ruler">${Array.from({length:L/2+1},(_,k)=>`<span>${k*2}m</span>`).join('')}</div>
   <div class="logbox"><div class="log">${T.map(p=>`<div class="mark" style="left:${p}%"></div>`).join('')}<div class="saw"><span>🪚</span></div></div></div>
-  <div class="msg">長さ8mの原木を、約2mずつに切り分けます。赤く光る印にノコが重なった瞬間に「切る！」（3回）。</div>
+  <div class="msg">長さ${L}mの原木を、約2mずつに切り分けます。赤く光る印にノコが重なった瞬間に「切る！」（${N}回）。</div>
   <button class="big act">🪚 切る！（スペースキーでもOK）</button>`;
   const log=area.querySelector('.log'),saw=area.querySelector('.saw'),marks=[...area.querySelectorAll('.mark')],msg=area.querySelector('.msg');
-  let k=0,x=0,dir=1,speed=30;const res=[],errs=[];marks[0].classList.add('active');
+  // 速さは「1秒に動くm数」をそろえるため、原木の長さで割合に換算する
+  let k=0,x=0,dir=1,speed=cf.saw*8/L;const res=[],errs=[];marks[0].classList.add('active');
   loop(dt=>{x+=dir*speed*dt;if(x>100){x=100;dir=-1}if(x<0){x=0;dir=1}saw.style.left=x+'%'});
-  function cut(){if(k>=3)return;const cm=Math.round(Math.abs(x-T[k])*8);errs.push(cm);res.push(Math.max(0,100-cm*2));
+  function cut(){if(k>=N)return;const cm=Math.round(Math.abs(x-T[k])*L);errs.push(cm);res.push(Math.max(0,100-cm*2));
     log.insertAdjacentHTML('beforeend',`<div class="cutline" style="left:${x}%"></div>`);marks[k].classList.remove('active');
     msg.textContent=(cm<=4?'🎯 ぴったり！':cm<=15?'👍 いいね！':'😅 ずれた…短すぎると製品の寸法が取れず、長すぎると材料のムダに。')+` 誤差 ${cm}cm`;
     beep(cm<=4?880:cm<=15?660:300,.12,'triangle');
-    k++;speed+=14;if(k<3)marks[k].classList.add('active');
-    else{runCleanups();setTimeout(()=>done(res.reduce((a,b)=>a+b)/3,`誤差：${errs.join('cm / ')}cm`),500)}}
+    k++;speed+=cf.sawUp*8/L;if(k<N)marks[k].classList.add('active');
+    else{runCleanups();setTimeout(()=>done(res.reduce((a,b)=>a+b)/N,`誤差：${errs.join('cm / ')}cm`),500)}}
   area.querySelector('.act').onclick=cut;onKey(cut);
 }
 
 function playDebark(area,done){
-  scratch(area,{time:10,label:'皮むき',radius:60,tone:120,
-    msg:'丸太をなぞって（ドラッグ）樹皮をはがそう！樹皮が残ると、砂や小石で次の工程の刃が傷みます。',
-    bg:(c,W,H)=>grain(c,W,H,'#ecca8f','rgba(170,110,50,.35)'),
-    cell:(i,j)=>`hsl(${20+Math.random()*10},${28+Math.random()*15}%,${(j%3?20:13)+Math.random()*12}%)`},done);
+  const cf=V(),R=Math.random;
+  // 樹皮の見た目：stripe＝細長くはがれる／thick＝厚くうろこ状（2回で外皮→内皮→木部）／thin＝薄く灰色がかった皮
+  const cell={
+    stripe:(i,j)=>`hsl(${18+R()*10},${30+R()*15}%,${(j%3?20:13)+R()*12}%)`,
+    thick:(i,j)=>({c:`hsl(${22+R()*8},${18+R()*10}%,${((i>>1)+j*2)%5?17:10}%)`,c2:`hsl(${12+R()*8},${45+R()*10}%,${34+R()*8}%)`}),
+    thin:(i,j)=>`hsl(${28+R()*8},${12+R()*10}%,${38+R()*14}%)`,
+  }[cf.bark];
+  scratch(area,{time:cf.barkTime,label:'皮むき',radius:60,tone:120,hp:cf.barkHp,
+    msg:(cf.barkHp>1?'厚い樹皮は、1回こすると赤っぽい内皮が出てきます。もう一度こすってはがそう！ ':'丸太をなぞって（ドラッグ）樹皮をはがそう！ ')+'樹皮が残ると、砂や小石で次の工程の刃が傷みます。',
+    bg:(c,W,H)=>grain(c,W,H,'#ecca8f','rgba(170,110,50,.35)'),cell},done);
 }
 
 function playPeel(area,done){
-  const vt=G.order.vt;
+  const vt=G.order.vt,cf=V(),zw=cf.peelZone,lo=52-zw/2,hi=52+zw/2;
   area.innerHTML=`<div class="osheet">📋 この注文の単板の厚さの目安：<b>約${vt}mm</b>（${G.order.spec.split('・')[0]}を${G.order.ply}枚で構成）</div>
   <canvas class="cv" width="640" height="260"></canvas>
-  <div class="gauge"><div class="zone" style="left:42%;width:20%"></div><div class="needle"></div><span class="gl">うすい</span><span class="gm">目標 ${vt}mm 前後</span><span class="gr">あつい</span></div>
+  <div class="gauge"><div class="zone" style="left:${lo}%;width:${zw}%"></div><div class="needle"></div><span class="gl">うすい</span><span class="gm">目標 ${vt}mm 前後</span><span class="gr">あつい</span></div>
   <div class="hud"><span class="tm"></span><span class="th"></span><span class="pc"></span></div>
   <button class="big act">🔪 長押しで刃を押し当てる（スペース長押しもOK）</button>`;
   const cv=area.querySelector('canvas'),ctx=cv.getContext('2d'),nd=area.querySelector('.needle'),tm=area.querySelector('.tm'),th=area.querySelector('.th'),pc=area.querySelector('.pc'),act=area.querySelector('.act');
-  let hold=false,v=30,t=0,inZ=0,ang=0;const T=10,segs=[];
+  let hold=false,v=30,t=0,inZ=0,ang=0,nextKnot=1.5+Math.random(),knotFlash=0;const T=10,segs=[];
   const on=()=>hold=true,off=()=>hold=false;
   act.addEventListener('pointerdown',e=>{e.preventDefault();on()});['pointerup','pointerleave','pointercancel'].forEach(ev=>act.addEventListener(ev,off));
   act.addEventListener('contextmenu',e=>e.preventDefault());onKey(on,off);
   loop(dt=>{
-    t+=dt;const drift=Math.sin(t*1.7)*28+Math.sin(t*4.3+1)*14;
-    v=clamp(v+(hold?60:-50)*dt+drift*dt,0,100);const ok=v>=42&&v<=62;if(ok)inZ+=dt;
+    t+=dt;const drift=(Math.sin(t*1.7)*28+Math.sin(t*4.3+1)*14)*cf.drift;
+    // 節の多い原木：ときどき刃が節に当たって厚さが急に乱れる
+    if(cf.knotHits&&t>nextKnot){v+=(Math.random()<.5?-1:1)*(18+Math.random()*12);nextKnot=t+1.2+Math.random()*1.2;knotFlash=.6;beep(140,.12,'square',.04)}
+    knotFlash-=dt;
+    v=clamp(v+(hold?60:-50)*dt+drift*dt,0,100);const ok=v>=lo&&v<=hi;if(ok)inZ+=dt;
     ang+=3.5*dt;const r=100-70*Math.min(1,t/T);
     segs.unshift({w:170*dt,ok,h:3+v/100*14});if(segs.length>800)segs.pop();
     const cx=170,cy=118,y=cy+r;
@@ -308,47 +342,53 @@ function playPeel(area,done){
     ctx.fillStyle='#9aa3ad';ctx.beginPath();ctx.moveTo(cx-6,y+1);ctx.lineTo(cx+70,y+1);ctx.lineTo(cx+70,y+22);ctx.closePath();ctx.fill();
     ctx.fillStyle='#ccc';ctx.font='14px sans-serif';ctx.fillText('単板（ベニヤ）→',430,y-24);
     if(t>T-2){ctx.fillStyle='#fff';ctx.fillText('残った芯＝剥き芯',cx-50,cy-r-10)}
+    if(knotFlash>0){ctx.fillStyle='#ffcf5a';ctx.font='bold 22px sans-serif';ctx.fillText('ガツン！ 節に当たった！',330,40)}
     nd.style.left=v+'%';tm.textContent=`残り ${Math.max(0,T-t).toFixed(1)}秒`;th.textContent=`いまの厚さ ${(vt*(.5+v/100)).toFixed(1)}mm`;pc.textContent=`良品率 ${Math.round(inZ/t*100)}%`;
     if(t>=T){done(inZ/T*100,`目標の厚さで剥けた時間：${inZ.toFixed(1)}秒 / ${T}秒`);return false}
   });
 }
 
 function playDry(area,done){
+  const cf=V(),M0=cf.dryStart,CT=cf.crackT;
   area.innerHTML=`<div class="dryer"><div class="belt"></div><div class="oven"><span class="heat">♨ ♨ ♨</span><small>ドライヤー（熱風乾燥）</small></div><div class="sheet"></div></div>
   <div class="meters">
-    <div><div class="lbl">単板の含水率</div><div class="num mo">70.0%</div><div class="bar"><div class="fill mf"></div><div class="tz"></div></div><div class="sub">目標 8〜12%（10%前後がベスト）</div></div>
+    <div><div class="lbl">単板の含水率</div><div class="num mo">${M0.toFixed(1)}%</div><div class="bar"><div class="fill mf"></div><div class="tz" style="left:${8/M0*100}%;width:${4/M0*100}%"></div></div><div class="sub">目標 8〜12%（10%前後がベスト）</div></div>
     <div><div class="lbl">乾燥温度 <b class="tv">140</b>℃</div><input type="range" class="temp" min="100" max="180" value="140">
-      <div class="lbl">割れリスク（165℃超で上昇）</div><div class="bar"><div class="fill risk" style="width:0"></div></div></div>
+      <div class="lbl">割れリスク（${CT}℃超で上昇）</div><div class="bar"><div class="fill risk" style="width:0"></div></div></div>
   </div>
   <div class="msg">温度を上げると早く乾くけど、上げすぎると割れが出ます。乾きすぎも、乾き不足もNG。ここでの含水率は熱圧の工程にも影響します！</div>
   <button class="big act">📤 取り出す！（スペースでもOK）</button>`;
   const g=s=>area.querySelector(s),temp=g('.temp'),tv=g('.tv'),mo=g('.mo'),mf=g('.mf'),risk=g('.risk'),sheet=g('.sheet');
-  let m=70,t=0,crack=0,fin=false;
-  loop(dt=>{t+=dt;const T=+temp.value;tv.textContent=T;m=Math.max(0,m-(T-90)*.06*dt);
-    if(T>165)crack=Math.min(1,crack+(T-165)/15*.18*dt);
-    mo.textContent=m.toFixed(1)+'%';mo.className='num mo'+(m>=8&&m<=12?' good':'');mf.style.width=(m/70*100)+'%';risk.style.width=crack*100+'%';
-    sheet.style.background=`hsl(34,50%,${32+(70-m)/70*42}%)`;
+  let m=M0,t=0,crack=0,fin=false;
+  // 160℃で乾かしたときの目安時間をもとに、早さボーナスの基準を決める
+  const ref=(M0-10)/((160-90)*.06*cf.dryRate);
+  loop(dt=>{t+=dt;const T=+temp.value;tv.textContent=T;m=Math.max(0,m-(T-90)*.06*cf.dryRate*dt);
+    if(T>CT)crack=Math.min(1,crack+(T-CT)/15*.18*dt);
+    mo.textContent=m.toFixed(1)+'%';mo.className='num mo'+(m>=8&&m<=12?' good':'');mf.style.width=(m/M0*100)+'%';risk.style.width=crack*100+'%';
+    sheet.style.background=`hsl(34,50%,${32+(M0-m)/M0*42}%)`;
     if(m<=0){finish();return false}});
-  function finish(){if(fin)return;fin=true;G.moisture=m;const acc=Math.max(0,75-Math.abs(m-10)*12),sp=clamp((35-t)/20,0,1)*25,pen=crack*45;
+  function finish(){if(fin)return;fin=true;G.moisture=m;const acc=Math.max(0,75-Math.abs(m-10)*12),sp=clamp((ref*2.4-t)/(ref*1.4),0,1)*25,pen=crack*45;
     const why=m>12?'（乾き不足：熱圧でパンクしやすくなります）':m<8?'（乾きすぎ：割れや接着不良の原因に）':'';
     done(acc+sp-pen,`含水率 ${m.toFixed(1)}%${why}・時間 ${t.toFixed(1)}秒${pen>2?`・割れ発生 -${Math.round(pen)}点`:''}`)}
   g('.act').onclick=finish;onKey(finish);
 }
 
 function playSort(area,done){
-  const types=shuffle(['A','A','A','B','B','B','X','X']),N=types.length,name={A:'表板',B:'心板',X:'補修行き'};
+  const cf=V(),types=shuffle([...cf.sortMix]),N=types.length,ST=cf.sortTime,name={A:'表板',B:'心板',X:'補修行き'};
   area.innerHTML=`<div class="hud"><span class="tm"></span><span class="cnt"></span></div>
   <div class="vstage"><div class="veneer"></div><div class="judge"></div></div>
   <div class="sort-btns"><button data-g="A">✨ 表板<br><small>きれい・欠点なし</small></button><button data-g="B">🟤 心板<br><small>小さな節がある</small></button><button data-g="X">🩹 補修行き<br><small>割れ・穴がある</small></button></div>
-  <div class="msg">単板をよく見て仕分けよう！（20秒で8枚）</div>`;
+  <div class="msg">単板をよく見て仕分けよう！（${ST}秒で${N}枚）${cf.smallKnot?'　小さな節にも注意！':''}</div>`;
   const g=s=>area.querySelector(s),vn=g('.veneer'),jd=g('.judge'),tm=g('.tm'),cnt=g('.cnt'),msg=g('.msg');
   const R=(a,b)=>a+Math.random()*(b-a);
-  const knot=()=>`<i class="knot" style="left:${R(6,88)}%;top:${R(12,75)}%;width:${R(14,22)}px;height:${R(10,15)}px"></i>`;
-  function feat(t){let h='';if(t==='B')for(let k=0,n=2+(Math.random()*3|0);k<n;k++)h+=knot();
+  // 室内用（smallKnot）は節が小さく数も少ないので、見落としやすい
+  const knot=()=>cf.smallKnot?`<i class="knot" style="left:${R(6,88)}%;top:${R(12,75)}%;width:${R(9,13)}px;height:${R(7,10)}px"></i>`
+    :`<i class="knot" style="left:${R(6,88)}%;top:${R(12,75)}%;width:${R(14,22)}px;height:${R(10,15)}px"></i>`;
+  function feat(t){let h='';if(t==='B')for(let k=0,n=(cf.smallKnot?1:2)+(Math.random()*(cf.smallKnot?2:3)|0);k<n;k++)h+=knot();
     if(t==='X'){h+=Math.random()<.5?`<i class="crack" style="left:${R(5,40)}%;top:${R(20,75)}%;width:${R(35,55)}%;transform:rotate(${R(-3,3)}deg)"></i>`
       :`<i class="hole" style="left:${R(15,75)}%;top:${R(20,60)}%"></i>`;if(Math.random()<.5)h+=knot()}return h}
   const why={A:'欠点のないきれいな単板は、見える面の表板（裏板）に使います。',B:'小さな節は強さへの影響が小さく、見えない内側の心板に回せます。',X:'割れや穴はそのままだと弱点になるので、補修（パッチ）してから使います。'};
-  let i=0,ok=0,t=20,end=false;
+  let i=0,ok=0,t=ST,end=false;
   const show=()=>{vn.innerHTML=feat(types[i]);cnt.textContent=`${i+1} / ${N}`;vn.classList.remove('in');void vn.offsetWidth;vn.classList.add('in')};
   const finish=()=>{if(end)return;end=true;done(ok/N*100,`正解 ${ok} / ${N}枚`)};
   area.querySelectorAll('.sort-btns button').forEach(b=>b.onclick=()=>{if(end)return;const right=b.dataset.g===types[i];
@@ -378,7 +418,7 @@ function playLayup(area,done){
     lys.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const k=+b.dataset.g;glue[k]^=1;beep(420,.05);render()})}
   render();
   area.querySelectorAll('.glues button').forEach(b=>b.onclick=()=>{sel=GLUES[+b.dataset.k];area.querySelectorAll('.glues button').forEach(x=>x.classList.toggle('on',x===b));beep(600,.05)});
-  let t=40,end=false;
+  let t=V().layTime,end=false;
   const finish=()=>{if(end)return;end=true;
     const a=dirs.filter((d,k)=>d===want[k]).length,b=glue.filter((g,k)=>g===wantGlue[k]).length;
     G.dirsOK=a===n;G.glueOK=b===n;G.glue=sel;
@@ -406,14 +446,15 @@ function playPress(area,done){
   <div class="gauge"><div class="zone" style="left:45%;width:${wet?14:20}%"></div><div class="needle"></div><span class="gl">0</span><span class="gm">適正圧力（約1MPa前後）</span><span class="gr">MAX</span></div>
   <div class="hud"><span class="tm"></span><span>🌡 熱盤 約120℃</span><span class="pg"></span></div>
   <div class="progress"><div></div></div>
-  <div class="msg">${wet?`⚠ 単板の含水率が ${G.moisture.toFixed(1)}% と高め！ 水分が蒸気になって「パンク」が起きやすく、適正ゾーンもせまくなっています。<br>`:''}連打で圧力を上げ、緑のゾーンをキープ！ゾーン内の間だけ接着剤が固まります。</div>
+  <div class="msg">${wet?`⚠ 単板の含水率が ${G.moisture.toFixed(1)}% と高め！ 水分が蒸気になって「パンク」が起きやすく、適正ゾーンもせまくなっています。<br>`:''}連打で圧力を上げ、緑のゾーンをキープ！ゾーン内の間だけ接着剤が固まります（この板はゾーン内で約${V().pressNeed}秒）。</div>
   <button class="big act">💪 加圧！（連打／スペース連打）</button>`;
   const g=s=>area.querySelector(s),top=g('.plate.top'),nd=g('.needle'),tm=g('.tm'),pg=g('.pg'),pf=g('.progress div'),st=g('.steam'),msg=g('.msg');
-  const lo=45,hi=wet?59:65;let p=0,t=0,prog=0,pank=0,flash=0;const T=15;
+  // 板が厚いほど、ゾーン内に保つ必要がある時間（need）が長い
+  const cf=V(),need=cf.pressNeed,lo=45,hi=wet?59:65;let p=0,t=0,prog=0,pank=0,flash=0;const T=need+8;
   const pump=()=>{p=Math.min(100,p+8);beep(250+p*5,.04,'square',.02)};
   g('.act').addEventListener('pointerdown',e=>{e.preventDefault();pump()});onKey(pump);
-  loop(dt=>{t+=dt;p=Math.max(0,p-(5+p*.12)*dt);const z=p>=lo&&p<=hi;
-    if(z)prog+=100/6*dt;
+  loop(dt=>{t+=dt;p=Math.max(0,p-(5+p*.12)*cf.leak*dt);const z=p>=lo&&p<=hi;
+    if(z)prog+=100/need*dt;
     if(wet&&z&&Math.random()<dt*.35){prog=Math.max(0,prog-25);pank++;flash=1.2;beep(120,.3,'sawtooth',.05)}
     flash-=dt;
     if(flash>0)msg.textContent='💥 パンク！ 単板の水分が蒸気になって膨れ、接着がはがれた…';
@@ -422,7 +463,7 @@ function playPress(area,done){
     top.style.transform=`translateY(${p*.36}px)`;st.style.opacity=z?1:0;nd.style.left=p+'%';
     pf.style.width=Math.min(100,prog)+'%';pg.textContent=`接着 ${Math.min(100,Math.round(prog))}%`;tm.textContent=`残り ${Math.max(0,T-t).toFixed(1)}秒`;
     const extra=pank?`・パンク ${pank}回`:'';
-    if(prog>=100){done(clamp(100-Math.max(0,t-6.5)*6,40,100)-pank*8,`接着完了まで ${t.toFixed(1)}秒${extra}`);return false}
+    if(prog>=100){done(clamp(100-Math.max(0,t-need-.5)*6,40,100)-pank*8,`接着完了まで ${t.toFixed(1)}秒${extra}`);return false}
     if(t>=T){done(prog*.6-pank*8,`時間切れ…接着 ${Math.round(prog)}%${extra}`);return false}});
 }
 
@@ -439,16 +480,16 @@ function playInspect(area,done){
   // 前の工程の結果に応じて、起きやすい不良を必ず混ぜる
   const must=[];if(G.moisture!=null&&G.moisture>12)must.push('pank');if(G.glueOK===false||G.scores[6]<60)must.push('peel');
   if(G.moisture!=null&&G.moisture<8)must.push('crack');
-  const list=[...new Set([...must,...shuffle(Object.keys(DEFECTS).filter(k=>!must.includes(k)))])].slice(0,4);
+  const list=[...new Set([...must,...shuffle(Object.keys(DEFECTS).filter(k=>!must.includes(k)))])].slice(0,V().inspN);
   const spots=[];
   const place=k=>{if(k==='chip')return[0,0];
     for(let n=0;n<50;n++){const p=[8+Math.random()*84,14+Math.random()*72];if(spots.every(s=>Math.hypot((s[0]-p[0])*2.4,s[1]-p[1])>26))return p}return[50,50]};
   list.forEach(k=>spots.push(place(k)));
   area.innerHTML=`<div class="hud"><span class="tm"></span><span class="fd"></span></div>
   <div class="ipanel">${list.map((k,n)=>`<div class="spot${k==='chip'?' corner':''}" data-n="${n}" style="left:${spots[n][0]}%;top:${spots[n][1]}%"><i class="d-${k}"></i></div>`).join('')}</div>
-  <div class="msg">トリミングと研磨が終わった合板です。出荷前の検査で、不良を<b>${list.length}か所</b>見つけてタップしよう！（15秒・関係ない所をタップすると減点）</div>`;
+  <div class="msg">トリミングと研磨が終わった合板です。出荷前の検査で、不良を<b>${list.length}か所</b>見つけてタップしよう！（${V().inspTime}秒・関係ない所をタップすると減点）</div>`;
   const pan=area.querySelector('.ipanel'),tm=area.querySelector('.tm'),fd=area.querySelector('.fd'),msg=area.querySelector('.msg');
-  let found=0,miss=0,t=15,end=false;
+  let found=0,miss=0,t=V().inspTime,end=false;
   const upd=()=>fd.textContent=`発見 ${found} / ${list.length}　ミス ${miss}`;upd();
   const finish=()=>{if(end)return;end=true;
     pan.querySelectorAll('.spot:not(.found)').forEach(s=>{s.classList.add('missed');s.insertAdjacentHTML('beforeend',`<span class="tag">見逃し：${DEFECTS[list[+s.dataset.n]].name}</span>`)});
@@ -469,12 +510,12 @@ function playInspect(area,done){
 const STAGES=[
  {icon:'🪚',name:'玉切り',yomi:'たまぎり',play:playCut,
   fact:'山から運ばれてきた長い原木を、つくる合板の大きさに合わせた長さに切りそろえます。3×6判（910×1820mm）なら約2m。最後に四辺を切りそろえる分の「余裕」を見込んで、製品より少し長めに切ります。',
-  how:'左右に動くノコギリが、赤く光る印に重なった瞬間にボタン（またはスペースキー）！3回切ります。',
+  how:'左右に動くノコギリが、赤く光る印に重なった瞬間にボタン（またはスペースキー）！切る回数は原木の長さで変わります。',
   points:['合板の代表的な大きさは「3×6判（さぶろくばん）」＝910×1820mm（3尺×6尺）。ほかに4×8判（1220×2440mm）など','仕上げのトリミング分を見込んで、製品より少し長めに切る','日本の合板には、スギ・カラマツ・ヒノキなどの国産材が多く使われている'],
  },
  {icon:'🌲',name:'剥皮',yomi:'はくひ',play:playDebark,
   fact:'樹皮には砂や小石がかみ込んでいて、次の工程の刃を傷めてしまいます。そこでバーカーという機械で皮をむきます。樹種によってはお湯や蒸気で温めて（蒸煮・煮沸）、木をやわらかくしてから剥きます。',
-  how:'丸太の上をマウスや指でなぞって樹皮をはがそう。制限時間は10秒！',
+  how:'丸太の上をマウスや指でなぞって樹皮をはがそう。時間内にどれだけきれいにできるかな？',
   points:['樹皮をむく機械を「バーカー」と呼ぶ','樹皮を残すと、かみ込んだ砂や小石でレースの刃が傷む','樹種によっては原木を温めて（蒸煮）やわらかくし、きれいに剥けるようにする'],
  },
  {icon:'🌀',name:'ロータリーレース',yomi:'かつらむき',play:playPeel,
@@ -489,12 +530,12 @@ const STAGES=[
  },
  {icon:'🔍',name:'選別',yomi:'せんべつ・ほしゅう',play:playSort,
   fact:'乾いた単板の節・割れ・穴をチェックして仕分けます。きれいな単板は表板・裏板に、小さな節がある単板は内側の心板に。割れや穴は補修（パッチ）し、幅の狭い単板はつなぎ合わせて（剥ぎ合わせ）1枚の大きさにします。',
-  how:'表示される単板を見て、3つのボタンから正しい行き先を選ぼう。20秒で8枚！',
+  how:'表示される単板を見て、3つのボタンから正しい行き先を選ぼう。時間内に全部仕分けられるかな？',
   points:['見える面（表板）の見た目が、合板の板面の品質を決める','小さな節のある単板は内側（心板）に回してムダなく使う','穴は「パッチ（埋め木）」で補修してから使う','幅の狭い単板をつなぐ工程を「剥ぎ合わせ」（機械：コンポーザーなど）という'],
  },
  {icon:'🧩',name:'組み立て',yomi:'のりづけ・せきそう',play:playLayup,
   fact:'グルースプレッダーで単板に接着剤を塗り、木目（繊維方向）が直角に交わるように重ねます（直交積層）。表と裏が対称になるよう奇数枚で重ねるのが基本です。使い道に合わせて、耐水性の違う接着剤（特類・1類・2類）を選びます。',
-  how:'「↻向き」で木目を回転、「🧴のり」で接着剤をON/OFF。注文の使い道に合った接着剤も選んで送り出そう（40秒）。',
+  how:'「↻向き」で木目を回転、「🧴のり」で接着剤をON/OFF。注文の使い道に合った接着剤も選んで送り出そう。',
   points:['合板は「3枚以上の単板を、繊維方向がほぼ直角に交わるように接着したもの」','直交させると方向による強さの差や伸び縮みがおさえられ、反り・割れにくくなる','表と裏を対称にするため、基本は奇数枚（3・5・7プライ…）','接着の性能：特類＝屋外・常に湿潤／1類＝ときどき湿潤／2類＝主に室内'],
  },
  {icon:'🔥',name:'熱圧',yomi:'ねつあつ',play:playPress,
@@ -504,7 +545,7 @@ const STAGES=[
  },
  {icon:'✨',name:'仕上げ・検査',yomi:'しあげ・けんさ',play:playInspect,
   fact:'固まった合板の四辺を切りそろえ（トリミング）、用途に応じて表面をサンダーで研磨します。最後に検査を行い、膨れ・はく離・割れなどの不良がないかを確かめます。JAS（日本農林規格）の格付けを受けた製品にはJASマークが表示されて出荷されます。',
-  how:'出荷前の合板の中から、不良（膨れ・はく離・割れ・節抜けなど）を見つけてタップしよう。前の工程で失敗すると、それが原因の不良が出てきます（15秒）。',
+  how:'出荷前の合板の中から、不良（膨れ・はく離・割れ・節抜けなど）を見つけてタップしよう。前の工程で失敗すると、それが原因の不良が出てきます。',
   points:['四辺の切りそろえ＝トリミング、表面の研磨＝サンダー','検査で見る主な不良：パンク（膨れ）・はく離・割れ・節抜け・角欠け・研磨むら','不良の多くは前の工程に原因がある（含水率が高い→パンク、接着不良→はく離 など）','JAS（日本農林規格）では、合板の含水率は14%以下などの基準がある','ホルムアルデヒド放散量は F☆☆☆☆（フォースター）が最も少ない区分','主な種類：構造用合板（建物の下地）、コンクリート型枠用合板（コンパネ）、普通合板 など'],
  },
 ];
@@ -671,6 +712,7 @@ function showIntro(i){
   <h2>${s.icon} ${s.name}<span class="yomi">${s.yomi}</span></h2>
   <div class="fact"><b>🏭 実際の工場では</b><p>${s.fact}</p></div>
   <div class="how"><b>🎮 あそびかた</b><p>${s.how}</p></div>
+  <div class="osheet"><b>📋 今回の注文（${G.order.icon} ${G.order.name}）ならでは</b><br>${V().notes[i]}</div>
   <button class="big" id="go">スタート！</button></section>`;
   document.getElementById('go').onclick=()=>startStage(i);
 }
