@@ -234,13 +234,13 @@ function playCut(area,done){
   <div class="msg">長さ8mの原木を、約2mずつに切り分けます。赤く光る印にノコが重なった瞬間に「切る！」（3回）。</div>
   <button class="big act">🪚 切る！（スペースキーでもOK）</button>`;
   const log=area.querySelector('.log'),saw=area.querySelector('.saw'),marks=[...area.querySelectorAll('.mark')],msg=area.querySelector('.msg');
-  let k=0,x=0,dir=1,speed=40;const res=[],errs=[];marks[0].classList.add('active');
+  let k=0,x=0,dir=1,speed=30;const res=[],errs=[];marks[0].classList.add('active');
   loop(dt=>{x+=dir*speed*dt;if(x>100){x=100;dir=-1}if(x<0){x=0;dir=1}saw.style.left=x+'%'});
   function cut(){if(k>=3)return;const cm=Math.round(Math.abs(x-T[k])*8);errs.push(cm);res.push(Math.max(0,100-cm*2));
     log.insertAdjacentHTML('beforeend',`<div class="cutline" style="left:${x}%"></div>`);marks[k].classList.remove('active');
     msg.textContent=(cm<=4?'🎯 ぴったり！':cm<=15?'👍 いいね！':'😅 ずれた…短すぎると製品の寸法が取れず、長すぎると材料のムダに。')+` 誤差 ${cm}cm`;
     beep(cm<=4?880:cm<=15?660:300,.12,'triangle');
-    k++;speed+=22;if(k<3)marks[k].classList.add('active');
+    k++;speed+=14;if(k<3)marks[k].classList.add('active');
     else{runCleanups();setTimeout(()=>done(res.reduce((a,b)=>a+b)/3,`誤差：${errs.join('cm / ')}cm`),500)}}
   area.querySelector('.act').onclick=cut;onKey(cut);
 }
