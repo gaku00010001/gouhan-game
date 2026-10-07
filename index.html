@@ -300,10 +300,14 @@ function scratch(area,o,done){
   const cv=area.querySelector('canvas'),ctx=cv.getContext('2d'),tm=area.querySelector('.tm'),pc=area.querySelector('.pc');
   // hp>1 のセルは、間をあけて何回かこすらないと消えない（厚い樹皮）
   const hp=o.hp||1,cells=[];
-  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const v=o.cell(i,j);cells.push({i,j,on:true,hp,t:0,c:v.c||v,c2:v.c2||v.c||v})}
-  let cleared=0,t=o.time,started=false,down=false,last=null;
-  const rub=(x,y)=>{const now=performance.now();for(const c of cells)if(c.on){const dx=(c.i+.5)*cw-x,dy=(c.j+.5)*ch-y;
-    if(dx*dx+dy*dy<900&&now-c.t>180){c.t=now;if(--c.hp<=0){c.on=false;cleared++}}}};
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const v=o.cell(i,j);cells.push({i,j,on:true,hp,t:0,over:0,dmg:false,c:v.c||v,c2:v.c2||v.c||v})}
+  let cleared=0,dmg=0,warn=0,t=o.time,started=false,down=false,last=null;
+  // o.damage のとき：皮がむけた所をさらに何度もこすると、丸太（木部）が傷つく
+  const OVER=4;
+  const rub=(x,y)=>{const now=performance.now();for(const c of cells){const dx=(c.i+.5)*cw-x,dy=(c.j+.5)*ch-y;
+    if(dx*dx+dy*dy>=900||now-c.t<=180)continue;c.t=now;
+    if(c.on){if(--c.hp<=0){c.on=false;cleared++}}
+    else if(o.damage&&!c.dmg&&++c.over>=OVER){c.dmg=true;dmg++;warn=1.2;beep(150,.08,'square',.03)}}};
   const pos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]};
   cv.addEventListener('pointerdown',e=>{e.preventDefault();down=true;started=true;try{cv.setPointerCapture(e.pointerId)}catch(_){}last=pos(e);rub(...last)});
   cv.addEventListener('pointermove',e=>{if(!down)return;const p=pos(e),dx=p[0]-last[0],dy=p[1]-last[1],n=Math.ceil(Math.hypot(dx,dy)/10)||1;
@@ -312,11 +316,17 @@ function scratch(area,o,done){
   loop(dt=>{
     if(started)t-=dt;
     ctx.clearRect(0,0,W,H);ctx.save();rr(ctx,4,4,W-8,H-8,o.radius);ctx.clip();o.bg(ctx,W,H);
-    for(const c of cells)if(c.on){ctx.fillStyle=c.hp<hp?c.c2:c.c;ctx.fillRect(c.i*cw,c.j*ch,cw+.6,ch+.6)}ctx.restore();
-    const r=cleared/cells.length;
+    for(const c of cells){const x=c.i*cw,y=c.j*ch;
+      if(c.on){ctx.fillStyle=c.hp<hp?c.c2:c.c;ctx.fillRect(x,y,cw+.6,ch+.6)}
+      // こすりすぎの予告（だんだん色が濃くなる）→ 傷（えぐれ）
+      else if(c.dmg){ctx.fillStyle='#8a4a22';ctx.fillRect(x,y,cw+.6,ch+.6);ctx.fillStyle='rgba(60,25,8,.6)';ctx.fillRect(x,y+ch*.35,cw+.6,ch*.3)}
+      else if(c.over>=2){ctx.fillStyle=`rgba(160,80,30,${c.over>=3?.45:.22})`;ctx.fillRect(x,y,cw+.6,ch+.6)}}
+    ctx.restore();warn-=dt;
+    if(warn>0){ctx.fillStyle='#fff3c4';ctx.font='bold 20px sans-serif';ctx.fillText('⚠ こすりすぎ！ 丸太が傷ついた',150,40)}
+    const r=cleared/cells.length,pen=Math.min(50,dmg/cells.length*200);
     tm.textContent=started?`残り ${Math.max(0,t).toFixed(1)}秒`:`こすったらスタート（${o.time}秒）`;
-    pc.textContent=`${o.label} ${Math.round(r*100)}%`;
-    if(t<=0||r>=1){done(Math.min(100,r*104),`${o.label}できた割合：${Math.round(r*100)}%`);return false}
+    pc.textContent=`${o.label} ${Math.round(r*100)}%${o.damage?`　傷 ${dmg}か所`:''}`;
+    if(t<=0||r>=1){done(Math.min(100,r*104)-pen,`${o.label}できた割合：${Math.round(r*100)}%${dmg?`・こすりすぎの傷 ${dmg}か所（-${Math.round(pen)}点）`:''}`);return false}
   });
 }
 
@@ -348,8 +358,8 @@ function playDebark(area,done){
     thick:(i,j)=>({c:`hsl(${22+R()*8},${18+R()*10}%,${((i>>1)+j*2)%5?17:10}%)`,c2:`hsl(${12+R()*8},${45+R()*10}%,${34+R()*8}%)`}),
     thin:(i,j)=>`hsl(${28+R()*8},${12+R()*10}%,${38+R()*14}%)`,
   }[cf.bark];
-  scratch(area,{time:cf.barkTime,label:'皮むき',radius:60,tone:120,hp:cf.barkHp,
-    msg:(cf.barkHp>1?'厚い樹皮は、1回こすると赤っぽい内皮が出てきます。もう一度こすってはがそう！ ':'丸太をなぞって（ドラッグ）樹皮をはがそう！ ')+'樹皮が残ると、砂や小石で次の工程の刃が傷みます。',
+  scratch(area,{time:cf.barkTime,label:'皮むき',radius:60,tone:120,hp:cf.barkHp,damage:true,
+    msg:(cf.barkHp>1?'厚い樹皮は、1回こすると赤っぽい内皮が出てきます。もう一度こすってはがそう！ ':'丸太をなぞって（ドラッグ）樹皮をはがそう！ ')+'樹皮が残ると刃が傷みますが、皮がむけた所を何度もこすると丸太が傷ついて減点！（色が濃くなったら要注意）',
     bg:(c,W,H)=>grain(c,W,H,'#ecca8f','rgba(170,110,50,.35)'),cell},done);
 }
 
@@ -678,8 +688,8 @@ const STAGES=[
  },
  {icon:'🌲',name:'剥皮',yomi:'はくひ',play:playDebark,
   fact:'樹皮には砂や小石がかみ込んでいて、次の工程の刃を傷めてしまいます。そこでバーカーという機械で皮をむきます。樹種によってはお湯や蒸気で温めて（蒸煮・煮沸）、木をやわらかくしてから剥きます。',
-  how:'丸太の上をマウスや指でなぞって樹皮をはがそう。時間内にどれだけきれいにできるかな？',
-  points:['樹皮をむく機械を「バーカー」と呼ぶ','樹皮を残すと、かみ込んだ砂や小石でレースの刃が傷む','樹種によっては原木を温めて（蒸煮）やわらかくし、きれいに剥けるようにする'],
+  how:'丸太の上をマウスや指でなぞって樹皮をはがそう。ただし、皮がむけた所を何度もこすりすぎると、丸太（木部）が傷ついて減点！ムダなく順番にむくのがコツです。',
+  points:['樹皮をむく機械を「バーカー」と呼ぶ','むきすぎて木部まで傷つけると、とれる単板の量（歩留まり）が減ってしまう','樹皮を残すと、かみ込んだ砂や小石でレースの刃が傷む','樹種によっては原木を温めて（蒸煮）やわらかくし、きれいに剥けるようにする'],
  },
  {icon:'🌀',name:'ロータリーレース',yomi:'かつらむき',play:playPeel,
   fact:'丸太を回転させながら刃を当て、大根のかつらむきのように薄い「単板（ベニヤ）」を連続して剥いていきます。剥いた単板はクリッパーで決まった幅に切られ、大きな欠点部分も取り除かれます。最後に残る芯（剥き芯）も杭などに再利用されます。',
