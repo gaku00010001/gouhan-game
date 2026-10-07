@@ -258,18 +258,18 @@ const GLUES=[
 const GRANK={'特類':3,'1類':2,'2類':1};
 // 注文ごとのミニゲームの違い（notes は各工程の説明画面に表示）
 const VARIANT={
- kozo:{log:8,cuts:[2,4,6],saw:30,sawUp:14,bark:'stripe',barkHp:1,barkTime:10,peelZone:20,drift:1,knotHits:false,
+ kozo:{log:8,cuts:[2,4,6],saw:30,sawUp:14,bark:'stripe',barkHp:1,barkTime:10,peelZone:14,drift:1,knotHits:false,
   dryStart:70,dryRate:1,crackT:165,sortMix:'AAABBBHHRR',belt:14,gap:2.4,smallKnot:false,layTime:40,pressNeed:7,leak:1,inspN:5,inspPanels:3,inspTime:9,
   notes:['長さ8mの原木を、約2mずつ切る回数は原木の長さで変わります。','樹皮が細長くはがれるタイプの原木です（10秒）。','単板の厚さの目安は約2.4mm。基本の剥き方をマスターしよう。',
    '厚めの単板（約2.4mm）なので、乾くまでに少し時間がかかります。','単板10枚が流れてきます。穴あき・燃料行きの単板もまんべんなく混ざっています。','5プライの構成です（40秒）。',
    '厚さ12mmの板は、接着剤が中まで固まるのに時間がかかります（ゾーン内で約7秒）。','合板3枚を検査。不良は全部で5か所、1枚9秒で判定します。']},
- kata:{log:6,cuts:[2,4],saw:38,sawUp:16,bark:'thick',barkHp:2,barkTime:12,peelZone:20,drift:1.15,knotHits:true,
+ kata:{log:6,cuts:[2,4],saw:38,sawUp:16,bark:'thick',barkHp:2,barkTime:12,peelZone:17,drift:1.15,knotHits:true,
   dryStart:80,dryRate:1,crackT:165,sortMix:'AAABBBBBHHHR',belt:15,gap:2.3,smallKnot:false,layTime:40,pressNeed:7,leak:1.3,inspN:5,inspPanels:3,inspTime:8,
   notes:['長さ6mの原木を2回切ります。ノコの動きが速めなので注意！','樹皮が厚い原木です。同じ場所を2回こすらないとはがれません（12秒）。',
    '節の多い原木です。ときどき刃が節に当たって、厚さが急に乱れます。','水分の多い単板（含水率80%から）です。乾くまでに時間がかかります。',
    '型枠用は、内側に使える節あり・穴あきの単板が多め。12枚が少し速めに流れてきます。','5プライの構成です（40秒）。',
    '厚さ12mm（ゾーン内で約7秒）。今回のプレス機は圧力が抜けやすいので、連打のペースを上げよう。','合板3枚を検査。不良は全部で5か所、1枚8秒と少し短めです。']},
- futsu:{log:10,cuts:[2,4,6,8],saw:26,sawUp:8,bark:'thin',barkHp:1,barkTime:8,peelZone:15,drift:.85,knotHits:false,
+ futsu:{log:10,cuts:[2,4,6,8],saw:26,sawUp:8,bark:'thin',barkHp:1,barkTime:8,peelZone:13,drift:.85,knotHits:false,
   dryStart:60,dryRate:1.4,crackT:155,sortMix:'AAAABBBHHR',belt:12,gap:2.6,smallKnot:true,layTime:30,pressNeed:5,leak:1,inspN:6,inspPanels:4,inspTime:8,
   notes:['長さ10mの長い原木を、約2mずつ4回切ります。','樹皮が薄い原木です。そのかわり制限時間は8秒！',
    '薄い単板（約1.8mm）は、厚さの許容範囲がせまくなります。','薄い単板は早く乾きますが、熱に弱く155℃を超えると割れやすくなります。',
